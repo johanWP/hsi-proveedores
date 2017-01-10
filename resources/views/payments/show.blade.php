@@ -1,145 +1,180 @@
 @extends('adminlte::layouts.app')
 
 @section('htmlheader_title')
-    {{ trans('adminlte_lang::message.home') }}
+    Detalle de pago
 @endsection
 
 @section('contentheader_title')
 Número de Pago {{ $pago[0]->NUMEROPAGO }}
-    <?PHP // dd($pago)?>
 @endsection
 
 @section('main-content')
     <div class="container-fluid spark-screen">
-        <div class="row">
-            <div class="col-md-12">
-                <div class="panel panel-default">
-                    <div class="panel-body">
-                        @foreach ( $pago as $cheque )
-                        @if ( ($cheque->TIPORETENCION == null) AND ($cheque->MONTOCHEQUE != null) )
-                            @if ($loop->first)
-                                <h3>Cheques</h3>
-                            @endif
-
-                        <div class="row">
-                            <div class="col-sm-2">
-                                <p><strong>Fecha: </strong></p>
-                                <p>
-                                    @if (is_null($cheque->FECHACHEQUE))
-                                    --
-                                    @else
-                                    {{ $cheque->FECHACHEQUE }}
-                                    @endif
-                                </p>
-                            </div>
-                            <div class="col-sm-2">
-                                <p><strong>Número de Cheque:</strong></p>
-                                <p>
-                                    @if (is_null($cheque->NUMERCOCHEQUE))
-                                    --
-                                    @else
-                                    {{ $cheque->NUMERCOCHEQUE }}
-                                    @endif
-                                </p>
-
-                            </div>
-                            <div class="col-sm-2">
-                                <p><strong>Monto:</strong></p>
-                                <p>
-                                    @if (is_null($cheque->MONTOCHEQUE))
-                                    --
-                                    @else
-                                    {{ $cheque->MONTOCHEQUE }}
-                                    @endif
-                                </p>
-                            </div>
-                            <div class="col-sm-6">
-                                <p><strong>A Nombre de:</strong></p>
-                                <p>
-                                    @if (is_null($cheque->NOMBREBENEFICIARIO))
-                                    --
-                                    @else
-                                    {{ $cheque->NOMBREBENEFICIARIO }}
-                                    @endif
-                                </p>
-
-                            </div>
-                        </div>
+        <div class="col-sm-12">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    @foreach ( $cheques as $cheque )
+                        @if ($loop->first)
+                            <h3>Cheques</h3>
+                            <table class="table table-condensed table-striped">
+                                <thead>
+                                <tr>
+                                    <th><p><strong>Fecha: </strong></p></th>
+                                    <th><p><strong>Número de Cheque: </strong></p></th>
+                                    <th><p><strong>A Nombre de: </strong></p></th>
+                                    <th><p><strong>Monto: </strong></p></th>
+                                </tr>
+                                </thead>
+                                <tbody>
                         @endif
-                        @endforeach
 
-                        @foreach( $transferencias as $transferencia )
+                    <tr>
+                        <td class="col-sm-3">
+                            <p>{{ $cheque->FECHACHEQUE }}</p>
+                        </td>
 
-                        @if ( ($transferencia->TIPORETENCION == null) AND ($transferencia->MONTOTRANSFERENCIA > 0) )
-                            @if ($loop->first)
-                                <h3>Transferencias</h3>
-                            @endif
+                        <td class="col-sm-3">
+                            <p>{{ $cheque->NUMERCOCHEQUE }}</p>
+                        </td>
+
+
+                        <td class="col-sm-4">
+                            <p>{{ $cheque->NOMBREBENEFICIARIO }}</p>
+                        </td>
+
+                        <td class="col-sm-2">
+                            <p>${{ $cheque->MONTOCHEQUE }}</p>
+                        </td>
+                    </tr>
+                    @if ($loop->last)
+                            </tbody>
+                        </table>
+                    @endif
+
+                    @endforeach
+
+                    @foreach( $transferencias as $transferencia )
+
+                        @if ($loop->first)
+                            <h3>Transferencias</h3>
+                            <table class="table table-condensed table-striped">
+                                <thead>
+                                <tr>
+                                    <th><p><strong>Banco: </strong></p></th>
+                                    <th><p><strong>Sucursal: </strong></p></th>
+                                    <th><p><strong>Número de Cuenta: </strong></p></th>
+                                    <th><p><strong>Número de Comprobante: </strong></p></th>
+                                    <th><p><strong>Monto: </strong></p></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                        @endif
+                                    <tr>
+                                        <td class="col-sm-2">
+                                            <p>{{ ucwords( strtolower($transferencia->BANCOTRANSFERENCIA) ) }}</p>
+                                        </td>
+
+                                        <td class="col-sm-2">
+                                            <p>{{ ucwords(strtolower($transferencia->SUCURSALTRANSFERENCIA)) }}</p>
+
+                                        </td>
+
+                                        <td class="col-sm-2">
+                                            <p>{{ $transferencia->NUMEROCUENTA }}</p>
+                                        </td>
+
+
+                                        <td class="col-sm-3">
+                                            <p>{{ $transferencia->NUMEROCOMPROBANTE }}</p>
+                                        </td>
+
+                                        <td class="col-sm-3">
+                                            <p>${{ $transferencia->MONTOTRANSFERENCIA }}</p>
+                                        </td>
+                                    </tr>
                         @if ($loop->last)
-                            <hr>
+                                </tbody>
+                            </table>
                         @endif
-                        <div class="row">
-                            <div class="col-sm-2">
-                                <p><strong>Banco: </strong></p>
-                                <p>
-                                    @if (is_null($transferencia->BANCOTRANSFERENCIA))
-                                    --
-                                    @else
-                                    {{ ucwords( strtolower($transferencia->BANCOTRANSFERENCIA) ) }}
-                                    @endif
-                                </p>
-                            </div>
-                            <div class="col-sm-2">
-                                <p><strong>Sucursal:</strong></p>
-                                <p>
-                                    @if (is_null($transferencia->SUCURSALTRANSFERENCIA))
-                                    --
-                                    @else
-                                    {{ $transferencia->SUCURSALTRANSFERENCIA }}
-                                    @endif
-                                </p>
 
-                            </div>
-                            <div class="col-sm-2">
-                                <p><strong>Número de Cuenta:</strong></p>
-                                <p>
-                                    @if (is_null($transferencia->NUMEROCUENTA))
-                                    --
-                                    @else
-                                    {{ $transferencia->NUMEROCUENTA }}
-                                    @endif
-                                </p>
-                            </div>
-                            <div class="col-sm-3">
-                                <p><strong>Monto:</strong></p>
-                                <p>
-                                    @if (is_null($transferencia->MONTOTRANSFERENCIA))
-                                    --
-                                    @else
-                                    {{ $transferencia->MONTOTRANSFERENCIA }}
-                                    @endif
-                                </p>
+                    @endforeach
 
-                            </div>
-                            <div class="col-sm-3">
-                                <p><strong>Número de Comprobante:</strong></p>
-                                <p>
-                                    @if (is_null($transferencia->NUMEROCOMPROBANTE))
-                                    --
-                                    @else
-                                    {{ $transferencia->NUMEROCOMPROBANTE }}
-                                    @endif
-                                </p>
+                    @foreach ($retenciones as $retencion)
 
-                            </div>
-                        </div>
+                        @if ($loop->first)
+                            <h3>Retenciones</h3>
+                                <table class="table table-condensed table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th><p><strong>Número de Retención:</strong></p></th>
+                                            <th><p><strong>Tipo de Retención: </strong></p></th>
+                                            <th><p><strong>Monto:</strong></p></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
                         @endif
+                                    <tr>
+                                        <td class="col-sm-4">
+                                            <p>{{ $retencion->NUMERORETENCION }}</p>
+                                        </td>
+                                        <td class="col-sm-6">
+                                            <p>{{ ucwords( strtolower($retencion->TIPORETENCION) ) }}</p>
+                                        </td>
+                                        <td class="col-sm-2">
+                                            <p>${{ $retencion->MONTORETENCION }}</p>
+                                        </td>
+
+                                    </tr>
+                        @if ($loop->last)
+                                    </tbody>
+                                </table>
+                        @endif
+                    @endforeach
+
+                    @foreach( $comprobantes as $comprobante )
+
+                    @if ($loop->first)
+                        <h3>Comprobantes</h3>
+                        <table class="table table-condensed table-striped">
+                            <thead>
+                            <tr>
+                                <th><p><strong>Número de Comprobante:</strong></p></th>
+                                <th><p><strong>Monto del Comprobante:</strong></p></th>
+                                <th><p><strong>Deuda del Comprobante:</strong></p></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                    @endif
+                    <tr>
+                        <td class="col-sm-4">
+                            <p>{{ $comprobante->NUMEROCOMPROBANTE }}</p>
+
+                        </td>
+                        <td class="col-sm-5">
+                            <p>${{ $comprobante->TOTALCOMPROBANTE }}</p>
+                        </td>
+
+
+                        <td class="col-sm-3">
+                            <p>${{ $comprobante->DEUDACOMPROBANTE }}</p>
+                        </td>
+
+                    </tr>
+                    @if ($loop->last)
+                            </tbody>
+                        </table>
+                    @endif
+
                         @endforeach
-
-
+                    <div class="col-sm-12">
+                        <button type="button" class="btn btn-default" id="btnBack" onclick="javascript:history.back()">
+                            <i class="fa fa-arrow-left"></i> Volver
+                        </button>
                     </div>
-                </div>
-            </div>
-        </div>
+                </div> {{-- Panel body--}}
+            </div> {{-- Panel--}}
+        </div> {{-- col-sm-12 --}}
     </div>
 @endsection
 

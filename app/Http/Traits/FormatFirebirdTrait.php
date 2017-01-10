@@ -10,14 +10,6 @@ trait FormatFirebirdTrait {
         {
             $fila = $this->Format($fila);
         }
-
-//        if ( is_array($var) )
-//        {
-//
-//        } else {
-//            dd($var);
-//            $var = $this->Format($var);
-//        }
         return $var;
     }
 

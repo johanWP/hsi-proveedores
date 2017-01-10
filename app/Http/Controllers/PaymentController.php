@@ -12,8 +12,12 @@ use App\Http\Traits\FormatFirebirdTrait;
 class PaymentController extends Controller
 {
     use FormatFirebirdTrait;
-    
-    public function index( $id = null )
+
+    /**
+     * @param null $id
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
+    public function index($id = null )
     {
         $prov = null;
         if (! is_null( $id ) )
@@ -22,9 +26,13 @@ class PaymentController extends Controller
         }
         return view('payments.index', compact('prov'));
     }
-    
 
-    public function show( $numeroPago )
+
+    /**
+     * @param Integer $numeroPago
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
+    public function show($numeroPago )
     {
         $temp = [];
         $query = "SELECT * FROM web_detpagoproveedores_jockey WHERE numeropago = '" . $numeroPago . "'";
@@ -34,16 +42,32 @@ class PaymentController extends Controller
             $temp = $this->FormatearDetalleDePago($pago);
             $pago = collect($temp);
 
-            $transferencias = $pago->filter( function ($value, $key) {
-                return ($value->MONTOTRANSFERENCIA != null);
-            } );
-//            dd($transferencias);
-            return view('payments.show', compact('pago', 'transferencias'));
+            $transferencias = $pago->filter(function ($value, $key) {
+                return ($value->MONTOTRANSFERENCIA > 0 AND $value->CUIT != '0');
+            })->unique('MONTOTRANSFERENCIA');
+
+            $cheques = $pago->filter(function ($value, $key){
+                return $value->MONTOCHEQUE != null AND $value->CUIT != '0';
+            })->unique('NUMERCOCHEQUE');
+
+            $retenciones = $pago->filter(function($value, $key){
+                return $value->MONTORETENCION > 0;
+            });
+
+            $comprobantes = $pago->filter(function($value, $key) {
+                return $value->NUMEROCOMPROBANTE != '0';
+            })->sortBy('NUMEROCOMPROBANTE');
+            return view('payments.show', compact('pago', 'transferencias', 'cheques', 'retenciones', 'comprobantes'));
         } else {
             return view('errors.404');
         }
     }
-    public function anyData( User $user = null )
+
+    /**
+     * @param User|null $user
+     * @return mixed
+     */
+    public function anyData(User $user = null )
     {
         if ( !is_null($user->cuit) )
         {
@@ -51,13 +75,20 @@ class PaymentController extends Controller
             $query = "SELECT * FROM web_detpagoproveedores_jockey WHERE cuit = '" . $cuit . "'";
         } else
         {
-            $query = "SELECT * FROM web_detpagoproveedores_jockey WHERE cuit <> '0'";
+            $query = "SELECT * FROM web_detpagoproveedores_jockey 
+                  WHERE 
+                    cuit <> '0' 
+                    AND 
+                    cuit <> '  -        -'
+                    AND
+                    (montoCheque IS NOT NULL OR efectivo > 0 OR montoTransferencia > 0)
+                  ORDER BY numeropago";
         }
 
         $filas = $this->FormatearDetalleDePago( DB::connection('firebird')->select( $query ) );
         return Datatables::of(
-            collect( $filas )
-        )->make( true );
+            collect($filas)
+        )->make(true);
     }
 
 

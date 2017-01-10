@@ -55,7 +55,6 @@ class BancoGaliciaController extends Controller
                     $proveedor = $this->datosProveedor($fila->CUIT);
                     if (! empty($proveedor->CBU) )
                     {
-dd($fila);
                         // pago con transferencia
                         $pd = $this->crearLineaPD($fullPath, $fila, $proveedor, $contador); // esto es un arreglo
 
