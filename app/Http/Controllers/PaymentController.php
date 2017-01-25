@@ -76,9 +76,10 @@ class PaymentController extends Controller
      */
     public function anyData($param= null )
     {
-        
+
         if(is_null($param))
         {
+            // Si no envía un parámetro, muestro los pagos del usuario logueado
             $cuit = $this->PonerGuionesAlCuit(Auth::user()->cuit);
             $query = "SELECT * FROM web_detpagoproveedores_jockey 
                 WHERE 
@@ -87,6 +88,7 @@ class PaymentController extends Controller
                 (montoCheque IS NOT NULL OR efectivo > 0 OR montoTransferencia > 0)
                 ORDER BY numeropago"; //dd($query);
         } elseif($param == 'all') {
+            // Muestro
             $query = "SELECT * FROM web_detpagoproveedores_jockey 
                 WHERE 
                 cuit <> '0' 
@@ -97,6 +99,7 @@ class PaymentController extends Controller
                 ORDER BY numeropago";
 
         } else {
+            $param = (int)$param;
             $cuit = $this->PonerGuionesAlCuit($param);
             $query = "SELECT * FROM web_detpagoproveedores_jockey 
                 WHERE 
