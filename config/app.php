@@ -181,6 +181,8 @@ return [
 		Acacha\AdminLTETemplateLaravel\Providers\AdminLTETemplateServiceProvider::class,
         Firebird\FirebirdServiceProvider::class,
         Yajra\Datatables\DatatablesServiceProvider::class,
+        Spatie\Permission\PermissionServiceProvider::class,
+        Laracasts\Flash\FlashServiceProvider::class,
 
     ],
 

@@ -3,13 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\User;
-use Yajra\Datatables\Datatables;
 use Spatie\Permission\Models\Permission;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\QueryException;
 
-class UserController extends Controller
+class PermissionController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -18,12 +15,8 @@ class UserController extends Controller
      */
     public function index()
     {
-        if(Auth::user()->can('ver_otros_usuarios'))
-        {
-            return view('users.index');
-        } else {
-            abort(403);
-        }
+        $permisos = Permission::all();
+        return view('permisos.index', compact('permisos'));
     }
 
     /**
@@ -44,7 +37,31 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
+        $rules = [
+            'name' => 'required|string|max:250',
+            'description' => 'required|string|max:250',
+        ];
+        $this->validate($request, $rules);
 
+        try {
+            $permiso = Permission::create([
+                'name' => $request->name,
+                'description' => $request->description
+            ]);
+
+            flash('Se incluyó el permiso <strong>' . $permiso->name . '</strong>.', 'success');
+
+        } catch (QueryException $e) {
+            $errorCode = $e->errorInfo[1];
+            if ($errorCode == 1062) {
+                $msg = 'El permiso <strong>' . $request->name . '</strong> ya existe. Elija otro nombre';
+            } else {
+                $msg ='Ocurrió un error al importar los usuarios';
+            }
+            flash($msg, 'danger');
+        }
+        $permisos = Permission::all();
+        return view('permisos.index', compact('permisos'));
     }
 
     /**
@@ -66,16 +83,7 @@ class UserController extends Controller
      */
     public function edit($id)
     {
-
-        if($id && Auth::user()->can('dar_permisos'))
-        {
-            $user = User::find($id);
-            $permisos = Permission::all();
-        } else {
-            abort(403);
-        }
-        return view('users.edit', compact('user', 'permisos'));
-
+        //
     }
 
     /**
@@ -87,18 +95,7 @@ class UserController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //Borro todos los permisos de ese usuario
-        $borrarTodo = DB::delete('delete from user_has_permissions where user_id  = ?', [$id]);
-        $user = User::find($id);
-        foreach($request->all() as $key => $value)
-        {
-            if ($key != '_method' && $key != '_token')
-            {
-                $user->givePermissionTo($key);
-            }
-        }
-        flash('Los permisos se otorgaron con éxito.', 'success');
-        return view('users.index');
+        //
     }
 
     /**
@@ -107,13 +104,11 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Permission $permiso)
     {
-        //
-    }
-
-    public function anyData()
-    {
-        return Datatables::of(User::query())->make(true);
+        flash('El permiso <strong>' . $permiso->name . '</strong> se eliminó del sistema', 'success');
+        $permiso->delete();
+        $permisos = Permission::all();
+        return view('permisos.index', compact('permisos'));
     }
 }

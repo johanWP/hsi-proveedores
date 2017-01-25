@@ -14,7 +14,7 @@
             <div class="col-md-12">
                 <div class="panel panel-default">
                     <div class="panel-body">
-                        <div class="table-responsivex">
+                        <div class="table-responsive">
                             <table class="table" id="users-table">
                                 <thead>
                                 <tr>
@@ -61,7 +61,7 @@
                     var botones;
 //                    botones = '<a href="/usuarios/' + data['id'] + '" class="btn btn-sm btn-primary">Ver Pagos</a> ';
                     botones = '<a href="/pagos/' + data['id'] + '" class="btn btn-sm btn-primary">Ver Pagos</a> ';
-                    botones = botones + ' <a href="/usuarios/' + data['id'] + '" class="btn btn-sm btn-default">Ver Perfil</a>';
+                    botones = botones + ' <a href="/usuarios/' + data['id'] + '/edit" class="btn btn-sm btn-default">Ver Perfil</a>';
                     return  botones;
                 }
             }]

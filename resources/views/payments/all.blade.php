@@ -15,20 +15,20 @@
                 <div class="panel panel-default">
                     <div class="panel-body">
                         {{--<div class="table-responsive">--}}
-                            <table class="table" id="payments-table">
-                                <thead>
-                                <tr>
-                                    <th>CUIT Proveedor</th>
-                                    <th>Número de Pago</th>
-                                    <th>Comprobante</th>
-                                    <th>Total Comprobante</th>
-                                    <th>Deuda Comprobante</th>
-                                    <th>Ver Detalle</th>
-                                </tr>
-                                </thead>
-                                <tbody>
+                        <table class="table" id="payments-table">
+                            <thead>
+                            <tr>
+                                <th>CUIT Proveedor</th>
+                                <th>Número de Pago</th>
+                                <th>Comprobante</th>
+                                <th>Total Comprobante</th>
+                                <th>Deuda Comprobante</th>
+                                <th>Ver Detalle</th>
+                            </tr>
+                            </thead>
+                            <tbody>
 
-                            </table>
+                        </table>
                         {{--</div>--}}
 
                     </div>
@@ -49,7 +49,7 @@
             $('#payments-table').DataTable({
                 processing: true,
                 serverSide: true,
-                ajax: '/api/pagos/{!! $param !!}',
+                ajax: '/api/pagos/all',
                 columns: [
                     { data: 'CUIT', name: 'CUIT' },
                     { data: 'NUMEROPAGO', name: 'NUMEROPAGO' },
@@ -64,7 +64,9 @@
                     "searchable": false,
                     "mRender": function(data, type, full) {
                         var botones;
-                        botones = '<a href="/pagos/detalle/' + data['NUMEROPAGO'] + '" class="btn btn-sm btn-primary">Ver Detalle</a>';
+                        var cuit = data['CUIT'];
+                        cuit = cuit.replace(/-/g, '');  // remueve los guiones
+                        botones = '<a href="/pagos/' + cuit + '" class="btn btn-sm btn-primary">Ver Pagos</a>';
                         return  botones;
 
                     }

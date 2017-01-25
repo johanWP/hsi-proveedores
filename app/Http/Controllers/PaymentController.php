@@ -14,27 +14,34 @@ class PaymentController extends Controller
     use FormatFirebirdTrait;
 
     /**
+     * Muestra el listado completo de pagos del sistema incluyendo a todos los proveedores
      * @param null $id
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function index($id = null )
+    public function index()
     {
-        $prov = null;
-        if (! is_null( $id ) )
-        {
-            $prov = User::find($id);
-        }
-        return view('payments.index', compact('prov'));
+        $param = '';
+        return view('payments.index', compact('param'));
     }
 
+    public function VerTodos()
+    {
+        return view('payments.all');
+    }
+
+    public function PorProveedor($prov_id)
+    {
+        $param = (int)$prov_id;
+        return view('payments.index', compact('param'));
+    }
 
     /**
      * @param Integer $numeroPago
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function show($numeroPago )
+    public function show($numeroPago)
     {
-        $temp = [];
+        $numeroPago = (int)$numeroPago;
         $query = "SELECT * FROM web_detpagoproveedores_jockey WHERE numeropago = '" . $numeroPago . "'";
         $pago = collect(DB::connection('firebird')->select( $query ));
         if ( $pago->count() > 0 )
@@ -67,28 +74,39 @@ class PaymentController extends Controller
      * @param User|null $user
      * @return mixed
      */
-    public function anyData(User $user = null )
+    public function anyData($param= null )
     {
-        if ( !is_null($user->cuit) )
+        
+        if(is_null($param))
         {
-            $cuit = $this->PonerGuionesAlCuit( $user->cuit );
-            $query = "SELECT * FROM web_detpagoproveedores_jockey WHERE cuit = '" . $cuit . "'";
-        } else
-        {
+            $cuit = $this->PonerGuionesAlCuit(Auth::user()->cuit);
             $query = "SELECT * FROM web_detpagoproveedores_jockey 
-                  WHERE 
-                    cuit <> '0' 
-                    AND 
-                    cuit <> '  -        -'
-                    AND
-                    (montoCheque IS NOT NULL OR efectivo > 0 OR montoTransferencia > 0)
-                  ORDER BY numeropago";
-        }
+                WHERE 
+                cuit = '" . $cuit . "'
+                AND
+                (montoCheque IS NOT NULL OR efectivo > 0 OR montoTransferencia > 0)
+                ORDER BY numeropago"; //dd($query);
+        } elseif($param == 'all') {
+            $query = "SELECT * FROM web_detpagoproveedores_jockey 
+                WHERE 
+                cuit <> '0' 
+                AND 
+                cuit <> '  -        -'
+                AND
+                (montoCheque IS NOT NULL OR efectivo > 0 OR montoTransferencia > 0)
+                ORDER BY numeropago";
 
-        $filas = $this->FormatearDetalleDePago( DB::connection('firebird')->select( $query ) );
-        return Datatables::of(
-            collect($filas)
-        )->make(true);
+        } else {
+            $cuit = $this->PonerGuionesAlCuit($param);
+            $query = "SELECT * FROM web_detpagoproveedores_jockey 
+                WHERE 
+                cuit = '" . $cuit . "'
+                AND
+                (montoCheque IS NOT NULL OR efectivo > 0 OR montoTransferencia > 0)
+                ORDER BY numeropago";
+        }
+        $filas = $this->FormatearDetalleDePago( DB::connection('firebird')->select($query) );
+        return Datatables::of(collect($filas))->make(true);
     }
 
 

@@ -19,5 +19,7 @@
                 'csrfToken' => csrf_token(),
         ]); ?>
     </script>
-
+    <style>
+        .form-control { color: #4a4b4c }
+    </style>
 </head>

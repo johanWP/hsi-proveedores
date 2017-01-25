@@ -18,7 +18,9 @@
 
         <!-- Main content -->
         <section class="content">
+            @include('adminlte::layouts.partials.flash')
             <!-- Your Page Content Here -->
+
             @yield('main-content')
         </section><!-- /.content -->
     </div><!-- /.content-wrapper -->
@@ -31,6 +33,9 @@
 </div>
 @section('scripts')
     @include('adminlte::layouts.partials.scripts')
+    <script>
+        $('div.alert').not('.alert-important').delay(3000).fadeOut(350);
+    </script>
 @show
 
 @yield('otros-scripts')

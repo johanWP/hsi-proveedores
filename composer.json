@@ -10,7 +10,9 @@
         "acacha/admin-lte-template-laravel": "3.*",
         "jacquestvanzuydam/laravel-firebird": "dev-5.3-support",
         "yajra/laravel-datatables-oracle": "^6.22",
-        "laravelcollective/html": "^5.3.0"
+        "laravelcollective/html": "^5.3.0",
+        "spatie/laravel-permission": "^1.7",
+        "laracasts/flash": "^2.0"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",
