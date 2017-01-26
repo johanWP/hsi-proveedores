@@ -54,8 +54,8 @@ class LoginController extends Controller
 
     protected function authenticated($request)
     {
-        $user = \App\User::where('cuit', $request->cuit)->first(); 
-        if(! $user->hasRole('proveedor')) {
+        $user = \App\User::where('cuit', $request->cuit)->first();
+        if($user->hasRole('proveedor') == 1) {
             return redirect('/pagos');
         }
 
