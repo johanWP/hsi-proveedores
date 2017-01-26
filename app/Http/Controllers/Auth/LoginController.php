@@ -51,4 +51,14 @@ class LoginController extends Controller
     {
         $this->middleware('guest', ['except' => 'logout']);
     }
+
+    protected function authenticated($request)
+    {
+        $user = \App\User::where('cuit', $request->cuit)->first(); 
+        if(! $user->hasRole('proveedor')) {
+            return redirect('/pagos');
+        }
+
+        return redirect('/home');
+    }
 }
