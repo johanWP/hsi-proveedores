@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
-use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 
-class PermissionController extends Controller
+class RoleController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -15,8 +16,9 @@ class PermissionController extends Controller
      */
     public function index()
     {
-        $permisos = Permission::all();
-        return view('permisos.index', compact('permisos'));
+        $roles = Role::all();
+        return view('roles.index', compact('roles'));
+            
     }
 
     /**
@@ -44,24 +46,24 @@ class PermissionController extends Controller
         $this->validate($request, $rules);
 
         try {
-            $permiso = Permission::create([
+            $rol = Role::create([
                 'name' => $request->name,
                 'description' => $request->description
             ]);
 
-            flash('Se incluyó el permiso <strong>' . $permiso->name . '</strong>.', 'success');
+            flash('Se incluyó el rol <strong>' . $rol->name . '</strong>.', 'success');
 
         } catch (QueryException $e) {
             $errorCode = $e->errorInfo[1];
             if ($errorCode == 1062) {
-                $msg = 'El permiso <strong>' . $request->name . '</strong> ya existe. Elija otro nombre';
+                $msg = 'El rol <strong>' . $request->name . '</strong> ya existe. Elija otro nombre.';
             } else {
-                $msg ='Ocurrió un error al crear el permiso.  Por favor, repórtelo al departamento de Sistemas';
+                $msg ='Ocurrió un error al crear el rol.  Por favor, repórtelo al departamento de Sistemas';
             }
             flash($msg, 'danger')->important();
         }
-        $permisos = Permission::all();
-        return view('permisos.index', compact('permisos'));
+        $roles = Role::all();
+        return view('roles.index', compact('roles'));
     }
 
     /**
@@ -83,7 +85,9 @@ class PermissionController extends Controller
      */
     public function edit($id)
     {
-        //
+        $rol = Role::findOrFail($id);
+        $permisos = Permission::all();
+        return view('roles.edit', compact('permisos', 'rol'));
     }
 
     /**
@@ -95,7 +99,20 @@ class PermissionController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        //Borro todos los permisos de ese rol
+        $borrarTodo = DB::delete('delete from role_has_permissions where role_id  = ?', [$id]);
+        $rol = Role::findOrFail($id);
+//        dd($request->all());
+        foreach($request->all() as $key => $value)
+        {
+            if ($key != '_method' && $key != '_token')
+            {
+                $rol->givePermissionTo($key);
+            }
+        }
+        flash('Los permisos se otorgaron con éxito al rol <strong>' . $rol->name . '</strong>.', 'success');
+        $roles = Role::all();
+        return view('roles.index', compact('roles'));
     }
 
     /**
@@ -104,11 +121,10 @@ class PermissionController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Permission $permiso)
+    public function destroy(Role $role)
     {
-        flash('El permiso <strong>' . $permiso->name . '</strong> se eliminó del sistema', 'success');
-        $permiso->delete();
-        $permisos = Permission::all();
-        return view('permisos.index', compact('permisos'));
-    }
+        flash('El rol <strong>' . $role->name . '</strong> se eliminó del sistema', 'success');
+        $role->delete();
+        $roles = Role::all();
+        return view('roles.index', compact('roles'));    }
 }

@@ -8,6 +8,7 @@ use Yajra\Datatables\Datatables;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
@@ -70,11 +71,11 @@ class UserController extends Controller
         if($id && Auth::user()->can('dar_permisos'))
         {
             $user = User::find($id);
-            $permisos = Permission::all();
+            $roles = Role::all();
         } else {
             abort(403);
         }
-        return view('users.edit', compact('user', 'permisos'));
+        return view('users.edit', compact('user', 'roles'));
 
     }
 
@@ -88,13 +89,13 @@ class UserController extends Controller
     public function update(Request $request, $id)
     {
         //Borro todos los permisos de ese usuario
-        $borrarTodo = DB::delete('delete from user_has_permissions where user_id  = ?', [$id]);
-        $user = User::find($id);
+        $user = User::findOrFail($id);
+        $borrarTodo = DB::delete('delete from user_has_roles where user_id  = ?', [$user->id]);
         foreach($request->all() as $key => $value)
         {
             if ($key != '_method' && $key != '_token')
             {
-                $user->givePermissionTo($key);
+                $user->assignRole($key);
             }
         }
         flash('Los permisos se otorgaron con éxito.', 'success');

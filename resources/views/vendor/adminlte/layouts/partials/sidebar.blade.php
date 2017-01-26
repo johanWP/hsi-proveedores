@@ -33,11 +33,15 @@
         <ul class="sidebar-menu">
             <li class="header">{{ trans('adminlte_lang::message.header') }}</li>
             <!-- Optionally, you can add icons to the links -->
-            <li class="active"><a href="{{ url('home') }}"><i class='fa fa-link'></i> <span>{{ trans('adminlte_lang::message.home') }}</span></a></li>
-            <li><a href="{{ url('/permisos') }}"><i class='fa fa-link'></i> <span>Permisos</span></a></li>
+            <li class="active"><a href="{{ url('home') }}"><i class='fa fa-home'></i> <span>{{ trans('adminlte_lang::message.home') }}</span></a></li>
             <li><a href="{{ url('/usuarios') }}"><i class='fa fa-users'></i> <span>Usuarios</span></a></li>
-
             <li class="treeview">
+                <a href="#"><i class='fa fa-key'></i> <span>Roles & Permisos</span> <i class="fa fa-angle-left pull-right"></i></a>
+                <ul class="treeview-menu">
+                    <li><a href="{{ url('/roles') }}"><span>Roles</span></a></li>
+                    <li><a href="{{ url('/permisos') }}"><span>Permisos</span></a></li>
+                </ul>
+            </li>            <li class="treeview">
                 <a href="#"><i class='fa fa-usd'></i> <span>Pagos</span> <i class="fa fa-angle-left pull-right"></i></a>
                 <ul class="treeview-menu">
                     <li><a href="{{ url('/pagos/todos') }}">Ver Todos</a></li>
