@@ -5,7 +5,7 @@
 @endsection
 
 @section('contentheader_title')
-
+    Todos los pagos a proveedores
 @endsection
 
 @section('main-content')
@@ -66,7 +66,7 @@
                         var botones;
                         var cuit = data['CUIT'];
                         cuit = cuit.replace(/-/g, '');  // remueve los guiones
-                        botones = '<a href="/pagos/' + cuit + '" class="btn btn-sm btn-primary">Ver Pagos</a>';
+                        botones = '<a href="/pagos/detalle/' + data['NUMEROPAGO'] + '" class="btn btn-sm btn-primary">Ver Detalle</a>';
                         return  botones;
 
                     }

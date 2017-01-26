@@ -21,18 +21,30 @@ class PaymentController extends Controller
     public function index()
     {
         $param = '';
-        return view('payments.index', compact('param'));
+        $header = 'Mis Pagos';
+        return view('payments.index', compact('param', 'header'));
     }
 
+    /**
+     * Devuelve un Datatable con todos los pagos registrados.  Los datos se envían por AJAX desde el método
+     * anyData con el parámetro 'all' enviado desde la vista
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
     public function VerTodos()
     {
         return view('payments.all');
     }
 
+    /**
+     * 
+     * @param $prov_id
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
     public function PorProveedor($prov_id)
     {
         $param = (int)$prov_id;
-        return view('payments.index', compact('param'));
+        $header = 'Pagos de ' . $this->PonerGuionesAlCuit($prov_id);
+        return view('payments.index', compact('param', 'header'));
     }
 
     /**

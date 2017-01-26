@@ -5,7 +5,7 @@
 @endsection
 
 @section('contentheader_title')
-
+    {{ $header }}
 @endsection
 
 @section('main-content')
@@ -18,7 +18,7 @@
                             <table class="table" id="payments-table">
                                 <thead>
                                 <tr>
-                                    <th>CUIT Proveedor</th>
+                                    {{--<th>CUIT Proveedor</th>--}}
                                     <th>Número de Pago</th>
                                     <th>Comprobante</th>
                                     <th>Total Comprobante</th>
@@ -51,14 +51,14 @@
                 serverSide: true,
                 ajax: '/api/pagos/{!! $param !!}',
                 columns: [
-                    { data: 'CUIT', name: 'CUIT' },
+//                    { data: 'CUIT', name: 'CUIT' },
                     { data: 'NUMEROPAGO', name: 'NUMEROPAGO' },
                     { data: 'NUMEROCOMPROBANTE', name: 'NUMEROCOMPROBANTE' },
                     { data: 'TOTALCOMPROBANTE', name: 'TOTALCOMPROBANTE' },
                     { data: 'DEUDACOMPROBANTE', name: 'DEUDACOMPROBANTE' }
                 ],
                 columnDefs: [{
-                    "targets": [5],
+                    "targets": [4],
                     "mData": null,
                     "sortable": false,
                     "searchable": false,
