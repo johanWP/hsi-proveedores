@@ -17,7 +17,7 @@
 
 					<div class="panel-body">
 						{{ trans('adminlte_lang::message.logged') }}
-						<datatable></datatable>
+						{{ Auth::user()->can('dar_permisos') }}
 					</div>
 				</div>
 			</div>

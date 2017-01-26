@@ -38,7 +38,7 @@
                         @foreach($roles as $rol)
                             @if($loop->first)
                                 <div class="table-responsive">
-                                    <table class="table" id="roles-table">
+                                    <table class="table table-hover" id="roles-table">
                                         <thead>
                                         <tr>
                                             <th>Permiso</th>

@@ -3,8 +3,9 @@
 namespace App\Http\Middleware;
 
 use Closure;
+use Auth;
 
-class PermissionMiddleware
+class RoleMiddleware
 {
     /**
      * Revisa que el usuario logueado tenga los permisos necesarios
@@ -13,12 +14,16 @@ class PermissionMiddleware
      * @param  \Closure  $next
      * @return mixed
      */
-    public function handle($request, Closure $next, $permission)
+    public function handle($request, Closure $next, $role, $permission)
     {
         if (Auth::guest()) {
             return redirect('/login');
         }
-        
+
+        if (! $request->user()->hasRole($role)) {
+            abort(403);
+        }
+
         if (! $request->user()->can($permission)) {
             abort(403);
         }

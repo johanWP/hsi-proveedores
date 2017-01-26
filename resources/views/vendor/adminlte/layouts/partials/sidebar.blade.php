@@ -34,28 +34,44 @@
             <li class="header">{{ trans('adminlte_lang::message.header') }}</li>
             <!-- Optionally, you can add icons to the links -->
             <li class="active"><a href="{{ url('home') }}"><i class='fa fa-home'></i> <span>{{ trans('adminlte_lang::message.home') }}</span></a></li>
-            <li><a href="{{ url('/usuarios') }}"><i class='fa fa-users'></i> <span>Usuarios</span></a></li>
+            @if(Auth::user()->can('ver_otros_usuarios'))
+                <li><a href="{{ url('/usuarios') }}"><i class='fa fa-users'></i> <span>Usuarios</span></a></li>
+            @endif
+            @if(Auth::user()->can('dar_permisos'))
             <li class="treeview">
                 <a href="#"><i class='fa fa-key'></i> <span>Roles & Permisos</span> <i class="fa fa-angle-left pull-right"></i></a>
                 <ul class="treeview-menu">
                     <li><a href="{{ url('/roles') }}"><span>Roles</span></a></li>
                     <li><a href="{{ url('/permisos') }}"><span>Permisos</span></a></li>
                 </ul>
-            </li>            <li class="treeview">
-                <a href="#"><i class='fa fa-usd'></i> <span>Pagos</span> <i class="fa fa-angle-left pull-right"></i></a>
+            </li>
+            @endif
+
+            @if(Auth::user()->can('ver_pagos_otros'))
+            <li class="treeview">
+                <a href="#"><i class='fa fa-usd'></i>
+                    <span>Pagos</span> <i class="fa fa-angle-left pull-right"></i>
+                </a>
                 <ul class="treeview-menu">
                     <li><a href="{{ url('/pagos/todos') }}">Ver Todos</a></li>
                     <li><a href="{{ url('/pagos') }}">Mis Pagos</a></li>
                 </ul>
             </li>
+            @else
+                <li><a href="{{ url('/pagos') }}"><i class='fa fa-usd'></i> <span>Mis Pagos</span></a></li>
+            @endif
             {{--<li><a href="#"><i class='fa fa-file-text'></i> <span>Archivos de Pagos</span></a></li>--}}
+            @if(Auth::user()->can('generar_archivo_de_pagos'))
             <li class="treeview">
-                <a href="#"><i class='fa fa-file-text'></i> <span>Archivos de Pagos</span> <i class="fa fa-angle-left pull-right"></i></a>
+                <a href="#"><i class='fa fa-file-text'></i>
+                    <span>Archivos de Pagos</span> <i class="fa fa-angle-left pull-right"></i>
+                </a>
                 <ul class="treeview-menu">
                     <li><a href="/banco/galicia">Banco Galicia</a></li>
                     {{--<li><a href="#">{{ trans('adminlte_lang::message.linklevel2') }}</a></li>--}}
                 </ul>
             </li>
+            @endif
         </ul><!-- /.sidebar-menu -->
     </section>
     <!-- /.sidebar -->
