@@ -24,7 +24,8 @@
         @endif
 
         <div class="login-box-body">
-        <p class="login-box-msg"> {{ trans('adminlte_lang::message.siginsession') }} </p>
+        <p class="login-box-msg">Ingrese su número de CUIT son guiones ni espacios o haga click
+            <a href="{{ url('/password/reset') }}">aquí</a> para establecer su primera contraseña. </p>
         <form action="{{ url('/login') }}" method="post">
             <input type="hidden" name="_token" value="{{ csrf_token() }}">
             <div class="form-group has-feedback">

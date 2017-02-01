@@ -17,7 +17,7 @@
 
 					<div class="panel-body">
 						{{ trans('adminlte_lang::message.logged') }}
-						{{ Auth::user()->can('dar_permisos') }}
+						{{ Auth::user()->can('ver_pagos_todos') }} <<
 					</div>
 				</div>
 			</div>

@@ -53,7 +53,7 @@
             </li>
             @endif
 
-            @if(Auth::user()->can('ver_pagos_otros'))
+            @if(Auth::user()->can('ver_pagos_todos'))
             <li class="treeview">
                 <a href="#"><i class='fa fa-usd'></i>
                     <span>Pagos</span> <i class="fa fa-angle-left pull-right"></i>

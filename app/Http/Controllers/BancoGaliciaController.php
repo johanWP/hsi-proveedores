@@ -27,6 +27,7 @@ class BancoGaliciaController extends Controller
      */
     public function generarArchivoTransferencias()
     {
+        // inicializar variables
         $archivo = '/galicia/' . uniqid() . '.txt';
         $fullPath = storage_path() . $archivo;
         $contador = 0;
@@ -400,8 +401,6 @@ class BancoGaliciaController extends Controller
         return $str;
     }
 
-    
-    
     /**
      * Devuelve una collection con los datos de un proveedor
      * @param String $cuit con guiones
