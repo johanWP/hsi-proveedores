@@ -127,7 +127,7 @@
                                 <img src="{{ Gravatar::get($user->email) }}" class="img-circle" alt="User Image" />
                                 <p>
                                     {{ Auth::user()->name }}
-                                    <small>Ingresado al sistema el {{ Auth::user()->created_at->format('d/m/Y') }}</small>
+                                    <small>Ingresado al sistema el {{ Auth::user()->created_at->format('d-m-Y') }}</small>
                                 </p>
                             </li>
                             <!-- Menu Body -->
@@ -145,7 +145,7 @@
                             <!-- Menu Footer-->
                             <li class="user-footer">
                                 <div class="pull-left">
-                                    <a href="{{ url('/usuarios/'. Auth::user()->id) }}" class="btn btn-default btn-flat">{{ trans('adminlte_lang::message.profile') }}</a>
+                                    {{--<a href="{{ url('/usuarios/'. Auth::user()->id) }}" class="btn btn-default btn-flat">{{ trans('adminlte_lang::message.profile') }}</a>--}}
                                 </div>
                                 <div class="pull-right">
                                     <a href="{{ url('/logout') }}" class="btn btn-default btn-flat"

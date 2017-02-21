@@ -69,6 +69,7 @@
                     processing: "Espera...",
                     search: "Buscar:&nbsp;",
                     info:   "Mostrando registros _START_ a _END_ de _TOTAL_ en total",
+                    lengthMenu:    "Mostrar _MENU_ facturas",
                     paginate: {
                         first: "Primero",
                         previous: "Anterior",
