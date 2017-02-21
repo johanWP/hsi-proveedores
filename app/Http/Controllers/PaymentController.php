@@ -25,6 +25,8 @@ class PaymentController extends Controller
         return view('payments.index', compact('param', 'header'));
     }
 
+
+    
     /**
      * Devuelve un Datatable con todos los pagos registrados.  Los datos se envían por AJAX desde el método
      * anyData con el parámetro 'all' enviado desde la vista
@@ -86,29 +88,34 @@ class PaymentController extends Controller
      * @param User|null $user
      * @return mixed
      */
-    public function anyData($param= null )
+    public function anyData($param = null)
     {
 
         if(is_null($param))
         {
-            // Si no envía un parámetro, muestro los pagos del usuario logueado
+            // Si no envía un parámetro, muestro las facturas del usuario logueado
             $cuit = $this->PonerGuionesAlCuit(Auth::user()->cuit);
-            $query = "SELECT * FROM web_detpagoproveedores_jockey 
-                WHERE 
-                cuit = '" . $cuit . "'
-                AND
-                (montoCheque IS NOT NULL OR efectivo > 0 OR montoTransferencia > 0)
-                ORDER BY numeropago"; //dd($query);
+            $query = "SELECT 
+                    a.numeroPago, a.cuit, b.razonSocial, 
+                    a.fechaCheque, a.numeroRetencion, a.montoRetencion, a.numeroComprobante, a.fechaPago, 
+                    b.fechaImputable, b.total
+                FROM
+                    web_detPagoProveedores_jockey a 
+                JOIN web_movimientosPorProveedor b 
+                ON a.numeroComprobante = b.numeroComprobante
+                WHERE a.cuit = '" . $cuit . "' 
+                ORDER BY a.numeroPago DESC";
         } elseif($param == 'all') {
-            // Muestro
-            $query = "SELECT * FROM web_detpagoproveedores_jockey 
-                WHERE 
-                cuit <> '0' 
-                AND 
-                cuit <> '  -        -'
-                AND
-                (montoCheque IS NOT NULL OR efectivo > 0 OR montoTransferencia > 0)
-                ORDER BY numeropago";
+            // Con el parametro ' all'  muestro todas las facturas
+            $query = "SELECT 
+                    a.numeroPago, a.cuit, b.razonSocial, 
+                    a.fechaCheque, a.numeroRetencion, a.montoRetencion, a.numeroComprobante, a.fechaPago, 
+                    b.fechaImputable, b.total
+                FROM
+                    web_detPagoProveedores_jockey a 
+                JOIN web_movimientosPorProveedor b 
+                ON a.numeroComprobante = b.numeroComprobante
+                ORDER BY a.numeroPago DESC";
 
         } else {
             $param = (int)$param;
@@ -124,5 +131,44 @@ class PaymentController extends Controller
         return Datatables::of(collect($filas))->make(true);
     }
 
+
+    public function ApiShow(Int $numeroPago)
+    {
+        $numeroPago = (int)$numeroPago;
+        $query = "SELECT * FROM web_detpagoproveedores_jockey WHERE numeropago = '" . $numeroPago . "'";
+        $pago = collect(DB::connection('firebird')->select( $query ));
+        if ($pago->count() > 0)
+        {
+            $temp = $this->FormatearDetalleDePago($pago);
+            $pago = collect($temp);
+
+            $transferencias = $pago->filter(function ($value, $key) {
+                return ($value->MONTOTRANSFERENCIA > 0 AND $value->CUIT != '0');
+            })->unique('MONTOTRANSFERENCIA');
+
+            $cheques = $pago->filter(function ($value, $key){
+                return $value->MONTOCHEQUE != null AND $value->CUIT != '0';
+            })->unique('NUMERCOCHEQUE');
+
+            $retenciones = $pago->filter(function($value, $key){
+                return $value->MONTORETENCION > 0;
+            });
+
+            $comprobantes = $pago->filter(function($value, $key) {
+                return $value->NUMEROCOMPROBANTE != '0';
+            })->sortBy('NUMEROCOMPROBANTE');
+
+
+//            $detPago['pago'] = $pago;
+            $detPago['transferencias'] = $transferencias;
+            $detPago['cheques'] = $cheques->flatten();
+            $detPago['retenciones'] = $retenciones;
+            $detPago['comprobantes'] = $comprobantes;
+//dd($cheques->flatten());
+            return json_encode($detPago);
+        } else {
+            return response('pagoNoExiste', 404);
+        }
+    }
 
 }

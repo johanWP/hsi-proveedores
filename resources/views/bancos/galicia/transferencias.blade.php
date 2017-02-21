@@ -15,7 +15,7 @@ Archivo de Transferencias Banco Galicia
                 <div class="panel panel-default">
                     <div class="panel-body">
                         <div class="col-sm-6">
-                            <a href="javascript:window.history.back()"><i class="fa fa-arrow-left"></i> Volver</a>
+                            <a class="btn btn-default" href="javascript:window.history.back()"><i class="fa fa-arrow-left"></i> Volver</a>
 
                         </div>
                         <div class="col-sm-6 text-right">

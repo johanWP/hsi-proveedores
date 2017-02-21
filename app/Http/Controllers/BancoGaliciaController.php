@@ -31,58 +31,93 @@ class BancoGaliciaController extends Controller
         $archivo = '/galicia/' . uniqid() . '.txt';
         $fullPath = storage_path() . $archivo;
         $contador = 0;
-        $cantidadTransferencias = 0;
         $pd = array();
-        $email ='';
+        $me ='';
         $o1 = '';
+        $lineaPago = '';
         $fc = array();
 
         if (!file_exists($fullPath)) {
-            $query = "SELECT 
-                        *
-                    FROM web_detPagoProveedores_jockey 
-                    WHERE montoTransferencia IS NOT NULL
-                        AND montoTransferencia > 0 
-                        AND cuit != '  -        -'
-                        AND bancoTransferencia = 'GALICIA'
-                    ORDER BY numeroPago, cuit DESC";
+            $file = fopen($fullPath, "w") or die("No se puedo crear el archivo.");
+            // Busco todos los pagos y retenciones
+            $query = "SELECT FIRST 10
+                p.numeroPago,
+                dp.razonSocial,
+                dp.cbu,
+                dp.cuit, dp.razonsocial, dp.cbu, dp.direccion, dp.barrio, dp.provincia, dp.localidad, dp.cp,                
+                dp.email, dp.condicionIva, dp.iibb, dp.agenteIibb, dp.telefono,
+                p.numeroComprobante, p.montoTransferencia, p.deudaComprobante,
+                f.tipoComprobante,  f.fechaComprobante, f.fechaImputable,
+                f.total AS TotalComprobante
+            FROM
+                web_proveedores_jockey dp INNER JOIN
+                web_movimientosporproveedor f ON dp.cuit = f.cuit INNER JOIN
+                web_detPagoProveedores_jockey p ON p.cuit = f.cuit 
+                AND p.numeroComprobante = f.numeroComprobante
+            WHERE
+                p.montoTransferencia > 0
+                AND p.bancoTransferencia = 'GALICIA'
+                AND dp.cbu IS NOT NULL
+            ORDER BY p.numeroPago desc";
+
             $filas = collect( DB::connection('firebird')->select($query) );
 
-            foreach ($filas as $fila)
+            $pagos = $filas->unique('NUMEROPAGO');
+
+
+            $pc = $this->crearLineaPC($pagos);
+            $lineaPago = $pc;
+            fwrite($file, $pc);
+//            $this->escribirLinea($fullPath, $pc);
+            foreach($pagos as $pago)  // v2
             {
                 $contador++;
-                if ( $fila->CUIT != 0 and ! is_null($fila->CUIT) )
+                $fc = '';
+                $o1 = '';
+                $me = '';
+                $retenciones = '';
+
+                $comprobantes = $filas->where('NUMEROPAGO', $pago->NUMEROPAGO)->unique('NUMEROCOMPROBANTE');
+                $facturas = $filas->where('NUMEROPAGO', $pago->NUMEROPAGO)
+                    ->whereIn('TIPOCOMPROBANTE', ['FA', 'FC', 'FM', 'FE' ]);
+                $notasCredito = $filas->where('NUMEROPAGO', $pago->NUMEROPAGO)
+                    ->whereIn('TIPOCOMPROBANTE', ['NCA', 'NCC']);
+
+                $notasDebito = $filas->where('NUMEROPAGO', $pago->NUMEROPAGO)
+                    ->whereIn('TIPOCOMPROBANTE', ['NDA', 'NDC']);
+
+                $queryRetenciones = 'SELECT * FROM web_detPagoProveedores_jockey 
+                    WHERE numeroPago = ' . (int)$pago->NUMEROPAGO . ' AND TipoRetencion IS NOT NULL and MontoRetencion > 0';
+                $retenciones = collect( DB::connection('firebird')->select($queryRetenciones) );
+
+                $pd = $this->crearLineaPD($pago, $contador);
+
+                $o1 = $this->crearLineaO1($facturas, $notasCredito, $notasDebito);
+
+                // Esto es un arreglo porque las facturas deben ir numeradas correlativamente
+                $lineasFacturas = $this->crearLineaFC($comprobantes, $retenciones);
+                foreach($lineasFacturas as $lineaFc)
                 {
-                    $proveedor = $this->datosProveedor($fila->CUIT);
-                    if (! empty($proveedor->CBU) )
-                    {
-                        // pago con transferencia
-                        $pd = $this->crearLineaPD($fullPath, $fila, $proveedor, $contador); // esto es un arreglo
-
-                        // email
-                        $email = $this->crearLineaME($fullPath, $proveedor);
-                        // Orden de pago
-                        $o1 = $this->crearLineaO1($fullPath, $fila, $filas);
-                        $fc = $this->crearLineaFC($fullPath, $fila, $filas); // esto es un arreglo
-                    }
-
-                } else {
-                    $c1 = $this->crearLineaC1($fullPath, $fila, $proveedor); // comprobante de retencion
+                    $fc .= $lineaFc . "\n";
                 }
-            }
 
-
-            if ($cantidadTransferencias > 0)
-            {
-                $bloque = $pd . $email . $o1;
-                foreach ($fc as $factura)
+                $email = $filas->where('NUMEROPAGO', $pago->NUMEROPAGO)->where('EMAIL', '!=', '');
+                if($email->count() > 0)
                 {
-                    $bloque .= $factura;
+                    $me = $this->crearLineaME(['EMAIL' => $email->first()->EMAIL]);
                 }
+
+                fwrite($file, $pd); //  Detalle para un pago con transferencia
+                fwrite($file, $o1); //  Registro de Orden de pago
+                fwrite($file, $fc); //  Registro de documento (Facturas pagadas)
+                $lineaC1 = $this->crearLineaC1($pago, $retenciones);
+                foreach ($lineaC1 as $c1){
+                    fwrite($file, $c1); //  Comprobantes de retencion
+                }
+                fwrite($file, $me); //  Dirección de email del proveedor
+                
             }
-            $pc = $this->crearLineaPC($pd);
-            $result = $this->escribirLinea($fullPath, $pc);
-            $result = $this->escribirLinea($fullPath, $bloque);
+            fclose($file);
         }
         return view('bancos.galicia.transferencias', compact('archivo'));
     }
@@ -90,76 +125,68 @@ class BancoGaliciaController extends Controller
 
     /**
      * Crea la cabecera del archivo de transferencias para Banco Galicia
-     * @param Array $pd Arreglo asociativo con el detalle de la tranasferencia y el monto
-     * @return mixed Cantidad de bytes escritos en el archivo, False si hubo un error
+     * @param Colelction Arreglo asociativo con el detalle de la tranasferencia y el monto
+     * @return String Línea con datos para escribir al archivo
      */
-    private function crearLineaPC(Array $pd)
+    private function crearLineaPC(\Illuminate\Support\Collection $pd)
     {
         $codigoRegistro = 'PC';
         $tipoLista = 'T';
-        $idLista = 1;  //TODO: buscar en la BD el numero que corresponde
-        $idLista = 'EE' . $this->formatearConCeros($idLista, 6);
+        $idLista = $this->formatearConCeros('1', 6);  //TODO: buscar en la BD el numero que corresponde
+        $idLista = 'J2' . $idLista;
         $fechaProceso = Carbon::today()->format('dmY');
-        $numCuenta = 'MMFFFFFFFDCCCE';
+        $numCuenta = '00007893499996';
         $razonSocial = $this->formatearConEspacios('Jockey Club A C', 40);
-        $cantidadPagos = $this->formatearConCeros($pd->count(), 6); //contar en el Firebird
-        $importePagos = $this->formatearConCeros( $pd->sum('monto'), 17);   // en centavos
+        $cantidadPagos = $this->formatearConCeros($pd->count(), 6);
+        $importePagos = $pd->sum('MONTOTRANSFERENCIA') * 100;
+        $importePagos = $this->formatearConCeros($importePagos, 17);   // en centavos
         $sucursal = $this->formatearConEspacios('000', 57);    //  000 siempre que son transferencias
         $moneda = $this->formatearConEspacios('001', 151);  // 001 = pesos arg
 
         $cabecera  = $codigoRegistro . $tipoLista . $idLista . $fechaProceso . $numCuenta;
         $cabecera .= $razonSocial . $cantidadPagos .$importePagos . $fechaProceso . $fechaProceso;
-        $cabecera .= $sucursal . $moneda . "\n";
+        $cabecera .= $sucursal . $moneda;
 
-        return $cabecera;
+        return $cabecera . "\r\n";
     }
 
     /**
      * Crea la linea de detalle para un pago por transferencia
-     * @param String $fullPath Ruta completa del archivo que se va generando
-     * @param Collection $fila
+     * @param \Illuminate\Support\Collection $fila
      * @param $proveedor
      * @param $numeroRegistro
      * @return Collection $arr Asociativo con dos columnas: texto y monto en centavos
      */
-    private function crearLineaPD($fullPath, $fila, $proveedor, $numeroRegistro)
+    private function crearLineaPD($fila, $numeroRegistro)
     {
         $transf = '';
-        $arr = array();
+        $codigoRegistro = 'PD';
 
-        if ( isset($proveedor->CBU) && !is_null($proveedor->CBU) )
-        {
-            $codigoRegistro = 'PD';
-            $numeroRegistro = $this->formatearConCeros($numeroRegistro, 6);
-            $importe = $fila->MONTOTRANSFERENCIA * 100;  // El monto debe ser en centavos
-            $importe = $this->formatearConCeros($importe, 17);
-            $moneda = '001';
-            $cbu = $this->formatearConCeros($proveedor->CBU, 22);
-            $fechaPago = Carbon::today()->format('dmY');
+        $numeroRegistro = $this->formatearConCeros($numeroRegistro, 6);
+        $importe = $fila->MONTOTRANSFERENCIA * 100;  // El monto debe ser en centavos
+        $importe = $this->formatearConCeros($importe, 17);
+        $moneda = '001';
+        $cbu = $this->formatearConCeros($fila->CBU, 22);
+        $fechaPago = Carbon::today()->format('dmY');
 
-            $razonSocial = utf8_encode($this->formatearConEspacios(ucwords(strtolower($proveedor->RAZONSOCIAL)), 50));
+        $razonSocial = utf8_encode($this->formatearConEspacios(ucwords(strtolower($fila->RAZONSOCIAL)), 50));
 
-            $direccion = utf8_encode($this->formatearConEspacios($proveedor->DIRECCION, 30));
-            $localidad = utf8_encode($this->formatearConEspacios($proveedor->LOCALIDAD, 20));
-            $codigoPostal = $this->formatearConEspacios($proveedor->CP, 6);
-            $telefono = str_replace('-', '', $proveedor->TELEFONO);
-            $telefono = $this->formatearConEspacios($telefono, 15);
-            $cuit = str_replace('-', '', $fila->CUIT);
-            $cuit = $this->formatearConCeros($cuit, 11);
-            $ordenPago = $this->formatearConEspacios((int)$fila->NUMEROPAGO, 35);
-            $conceptoPago = '01';
-            $destinoComprobantes = $this->formatearConEspacios('02', 93);
+        $direccion = utf8_encode($this->formatearConEspacios($fila->DIRECCION, 30));
+        $localidad = utf8_encode($this->formatearConEspacios($fila->LOCALIDAD, 20));
+        $codigoPostal = $this->formatearConEspacios($fila->CP, 6);
+        $telefono = str_replace('-', '', $fila->TELEFONO);
+        $telefono = $this->formatearConEspacios($telefono, 15);
+        $cuit = str_replace('-', '', $fila->CUIT);
+        $cuit = $this->formatearConCeros($cuit, 11);
+        $ordenPago = $this->formatearConEspacios((int)$fila->NUMEROPAGO, 35);
+        $conceptoPago = '01';
+        $destinoComprobantes = $this->formatearConEspacios('02', 93);
 
-            $transf = $codigoRegistro . $numeroRegistro . $importe . $moneda . $cbu . $fechaPago . $razonSocial;
-            $transf .= $direccion . $localidad . $codigoPostal . $telefono . $cuit;
-            $transf .= $ordenPago . $conceptoPago . $destinoComprobantes. "\n";
+        $transf = $codigoRegistro . $numeroRegistro . $importe . $moneda . $cbu . $fechaPago . $razonSocial;
+        $transf .= $direccion . $localidad . $codigoPostal . $telefono . $cuit;
+        $transf .= $ordenPago . $conceptoPago . $destinoComprobantes . "\n";
 
-            $arr[] = ['texto' => $transf, 'monto' => $importe];
-//            $bytes_written = file_put_contents($fullPath, $transf, FILE_APPEND);
-        }
-        $arr = collect($arr);
-
-        return $arr;
+        return $transf;
     }
 
 
@@ -168,97 +195,87 @@ class BancoGaliciaController extends Controller
      * @param Collection $prov Contiene datos del proveedor
      * @return String
      */
-    private function crearLineaME(String $fullPath, Collection $prov)
+    private function crearLineaME($pago)
     {
         $lineaME = '';
         $codigoRegistro = 'ME';
-        $arrProv = $prov->toArray();
-        $validator = Validator::make($arrProv, [
+        $arrPago = collect($pago)->toArray();
+        $validator = Validator::make($arrPago, [
             'EMAIL' => 'required|email',
         ]);
 
-        if ( ! $validator->fails() ) {
-            $email = $this->formatearConEspacios($prov->EMAIL, 320);
+        if (! $validator->fails())
+        {
+//            dd($arrPago['EMAIL']);
+            $email = $this->formatearConEspacios($arrPago['EMAIL'], 320);
             $lineaME = $codigoRegistro . $email . "\n";
-//            $bytes_written = file_put_contents($fullPath, $linea, FILE_APPEND);
         }
 
         return $lineaME;
     }
 
     /**
-     * Crea la línea O1 si existen para las primeras diez retenciones y
-     * agrega opcionalmente una línea O2 si existen mas de diez
-     * @param String $fullPath
-     * @param Collection $fila
-     * @param Collection $filas
+     * Crea la línea O1 para las primeras diez facturas y
+     * @param Collection $facturas
+     * @param Collection $retenciones
+     * @return String $linea Linea a escrbir
      */
-    private function crearLineaO1($fullPath, Collection $fila, Collection $filas)
+    private function crearLineaO1($facturas, $notasCredito, $notasDebito)
     {
-        $linea = '';
-        $codigoRegistro = 'O1';
-        $numeroPago = (int)$fila->NUMEROPAGO;
-        $numeroPago = $this->formatearConCeros($numeroPago, 10);
-        $importeTotal = $fila->MONTORETENCION + $fila->MONTOTRANSFERENCIA * 100; // en centavos
-        $importeTotal = $this->formatearConCeros($importeTotal, 17);
-        $notasDebito = $this->formatearConCeros('0', 17);
-        $notasCredito = $this->formatearConCeros('0', 17);
-        $importePagar = $this->formatearConCeros($fila->MONTOTRANSFERENCIA *100, 17);
-        $signo = '0';
-        $condicionPago = $this->formatearConEspacios(' ', 30);
+        $linea = "\n";
 
-        $retenciones = $filas->filter(function($pago) use ($fila) {
-            return ($fila->NUMEROPAGO == $pago->NUMEROPAGO) && ($pago->CUIT == '0');
-        });
+        $totalFC = 0;
+        $totalNC = 0;
+        $totalND = 0;
         $concepto_importe = '';
-        // Divido la collection de retenciones en collections más pequeñas, cada una de 10 retenciones
-        $retencionesFraccionadas = $retenciones->chunk(10);
+        $codigoRegistro = 'O1';
+        $numeroPago = (int)$facturas->first()->NUMEROPAGO;
+        $numeroPago = $this->formatearConCeros($numeroPago, 10);
 
-        if ( ! is_null($retencionesFraccionadas) && $retencionesFraccionadas->count() > 0 )
-        {
-            $retenciones = $retencionesFraccionadas->first()->toArray();
-        }
-        $i = 0;
-        foreach ($retenciones as $retencion)
-        {
-            $i++;
-            $tipoRetencion = $retencion->TIPORETENCION;
-            $montoRetencion = $retencion->MONTORETENCION;
-            if ( str_contains($tipoRetencion, 'GANANCIAS') )
-            {
-                $concepto = '03';
-            } elseif ( str_contains($retencion->TIPORETENCION, 'IVA') ) {
-                $concepto = '04';
-            } elseif ( str_contains($retencion->TIPORETENCION, 'SUSS') ) {
-                $concepto = '07';
-            } else {
-                $concepto = '11';
-            }
+//          Las facturas que tienen retenciones aparecen dos veces en el query,
+//        filtro para eliminar las duplicadas
+        $facturas = $facturas->unique('NUMEROCOMPROBANTE');
 
-            $importe = (int)($montoRetencion * 100); // en centavos
-            $importe = $this->formatearConCeros($importe, 17);
-            $concepto_importe .= $concepto . $importe;
+        foreach($facturas as $factura)
+        {
+            $totalFC = $totalFC + $factura->TOTALCOMPROBANTE -  $factura->DEUDACOMPROBANTE;
         }
-        
+
+        foreach($notasCredito as $notaCredito)
+        {
+            $totalNC = ($totalNC + $notaCredito->TOTALCOMPROBANTE) * -1;
+        }
+
+        foreach($notasDebito as $notaDebito)
+        {
+            $totalND = $totalND + $notaDebito->TOTALCOMPROBANTE;
+        }
+
+//        $importeTotal = ($retenciones->sum('MONTORETENCION') + $facturas->sum('MONTOTRANSFERENCIA'))  * 100; // en centavos
+
+        $importeTotal = $totalFC + $totalND + $totalNC;
+        ($importeTotal > 0) ? $signo = '0' : $signo = '1';
+        $totalFacturas = $this->formatearConCeros($totalFC * 100, 17);
+        $totalNotasDebito = $this->formatearConCeros($totalND * 100, 17);
+        $totalNotasCredito = $this->formatearConCeros($totalNC * 100, 17);
+        $importeTotal = $this->formatearConCeros($importeTotal * 100, 17);
+        $importePagar = $this->formatearConCeros($facturas->first()->MONTOTRANSFERENCIA * 100, 17);
+
+        if($importeTotal != $importePagar)
+        {
+//            dd( "El importe Total y el importe a Pagar no coinciden en la línea O1 del pago " . $numeroPago . " \n
+//                Importe Total: ". $importeTotal . "\nImporte Pagar: " . $importePagar);
+        }
+
+        $condicionPago = $this->formatearConEspacios('Pago por transferencia', 30);
+
+
         $relleno = $this->formatearConCeros('0', 19);
-        while ($i < 10)
-        {
-            $i++;
-            $concepto_importe .= $relleno;
-        }
 
-        // Si hay más de 10 retenciones, habrá más de 1 pedazo en $retencionesFraccionadas
-        if ($retencionesFraccionadas->count() > 1)
-        {
-            // aqui hago la línea O2
-        }
+        $espacio = $this->formatearConEspacios(' ', 209);
 
-
-        $espacio = $this->formatearConEspacios(' ', 19);
-        
-        $linea =  $codigoRegistro . $numeroPago . $importeTotal . $notasCredito . $notasDebito;
+        $linea =  $codigoRegistro . $numeroPago . $totalFacturas . $totalNotasDebito . $totalNotasCredito;
         $linea .= $importePagar . $signo . $condicionPago . $concepto_importe . $espacio . "\n";
-//        $bytes_written = file_put_contents($fullPath, $linea, FILE_APPEND);
         return $linea;
     }
 
@@ -269,98 +286,185 @@ class BancoGaliciaController extends Controller
      * @param Collection $filas
      * @return Collection $arrFc Arreglo con todas las lineas a escribir
      */
-    private function crearLineaFC($fullPath, Collection $fila, Collection $filas)
+//    private function crearLineaFC($facturas, $notasCredito, $notasDebito, $retenciones)
+    private function crearLineaFC($comprobantes, $retenciones)
     {
         $arrFc = array();
         $codigoRegistro = 'FC';
         $num = 0;
-        $tipoDocumento = 'FC';
-        $relleno = $this->formatearConCeros('0', 115) . $this->formatearConEspacios(' ', 97);
-        $facturas = $filas->filter(function ($pago) use ($fila) {
-            return ($fila->NUMEROPAGO == $pago->NUMEROPAGO) && ($pago->CUIT != '0');
-        });
+//        $comprobantes = new Collection();
+//        $comprobantes->push($facturas)->push($notasCredito)->push($notasDebito);
+        $tipoDoc2 = '  ';
+        $numComprobante2 = $this->formatearConCeros('0', 12);
+        $concepto2 = $this->formatearConEspacios(' ', 30);
+        $fechaEmision2 = $this->formatearConCeros('0', 8);
+        $importeComprobante2 = $this->formatearConCeros('0', 17);
+        $importeRetenido2    = $this->formatearConCeros('0', 17); // <-- cuando se pagan varias facturas (pago 7197), ¿cuanto de la retención se aplica a cada factura??
+        $baseImponible2      = $this->formatearConCeros('0', 17);
+        $alicuota2           = $this->formatearConCeros('0', 6);
+
+        $relleno = $this->formatearConEspacios(' ', 97);
 
         $concepto = $this->formatearConEspacios(' ', 30);
-        $fechaEmision = Carbon::today()->format('dmY');
-        $baseImponible = $facturas->sum('TOTALCOMPROBANTE') * 100;
-        foreach ($facturas as $factura)
+//        $fechaEmision = Carbon::today()->format('dmY');
+        foreach ($comprobantes as $comprobante)
         {
             $num++;
+            $tipoDocumento = $comprobante->TIPOCOMPROBANTE;
+            if($tipoDocumento = 'FA' or $tipoDocumento = 'FC' or $tipoDocumento = 'FE' or $tipoDocumento = 'FM')
+            {
+                $tipoComprobante = 'FC';
+
+            }elseif($tipoDocumento = 'NCA' or $tipoDocumento = 'NCC'){
+                $tipoComprobante = 'NC';
+
+            } elseif($tipoDocumento = 'NDA' or $tipoDocumento = 'NDC'){
+                $tipoComprobante = 'ND';
+
+            }
+
+            if (($retenciones->count() > 0)) {
+                $montoRetencion = $retenciones->sum('MONTORETENCION');
+            } else {
+                $montoRetencion = '0';
+            }
+
             $numRegistro        = $this->formatearConCeros($num, 3);
-            $numComprobante     = (int)$factura->NUMEROCOMPROBANTE;
+            $numComprobante     = (int)$comprobante->NUMEROCOMPROBANTE;
             $numComprobante     = $this->formatearConCeros($numComprobante, 12);
-            $importeComprobante = $this->formatearConCeros($factura->TOTALCOMPROBANTE * 100, 17);
-            $importeRetenido    = $this->formatearConCeros($factura->MONTORETENCION * 100, 17);
-            $baseImponible      = $this->formatearConCeros($baseImponible, 17);
-            $linea  = $codigoRegistro . $numRegistro . $tipoDocumento;
+//            $numComprobante     = $this->formatearConEspacios($numComprobante, 30);
+            $concepto           = $this->formatearConEspacios(' ', 30);
+            $importeComprobante = $this->formatearConCeros($comprobante->TOTALCOMPROBANTE * 100, 17);
+            $importeRetenido    = $this->formatearConCeros($montoRetencion  * 100 , 17); // <-- cuando se pagan varias facturas (pago 7197), ¿cuanto de la retención se aplica a cada factura??
+            $baseImponible      = $this->formatearConCeros($comprobante->TOTALCOMPROBANTE * 100, 17);
+            $fechaEmision       = Carbon::parse($comprobante->FECHACOMPROBANTE)->format('dmY');
+
+            $alicuota           = $this->formatearConCeros('0', 6);
+
+            $linea  = $codigoRegistro . $numRegistro . $tipoComprobante;
             $linea .= $numComprobante . $concepto . $fechaEmision;
-            $linea .= $importeComprobante . $importeRetenido . $baseImponible . $relleno . "\n";
+            $linea .= $importeComprobante . $importeRetenido . $baseImponible;
+            $linea .= $tipoDoc2 . $numComprobante2 . $concepto2 . $fechaEmision2;
+            $linea .= $importeComprobante2 . $importeRetenido2 . $baseImponible2;
+            $linea .= $alicuota . $alicuota2 . $relleno;
 
             $arrFc[] = $linea;
 //            $bytes_written = file_put_contents($fullPath, $linea, FILE_APPEND);
             $linea = '';
         }
+
+
         return collect($arrFc);
     }
 
     /**
      * Crea la línea para el comprobante de retencion
-     * @param $fullPath
-     * @param Collection $fila
-     * @param Collection $proveedor
-     * @return String
+     * @param Collection $pago
+     * @param Collection $retenciones
+     * @return Array
      */
-    private function crearLineaC1($fullPath, $fila,  $proveedor)
+    private function crearLineaC1($pago,  $retenciones)
     {
-        $codigoRegistro = 'C1';
-        $tipoRetencion = '';
-        switch ($fila->TIPORETENCION) {
-            case 'RET GANANCIAS VENTA DE BIENES DE CAMBIO RI':
-                // no break
-            case 'RET GANANCIAS LOCACION OBRA Y SERVICIOS':
-                // no break
-            case 'RET GANANCIAS FACTURA M':
-                $tipoRetencion = '02';
-                break;
-            case 'SERVICIOS DE SEGURIDAD SOCIAL SUSS':
+        $lineaC1 = array();
+        if(count($retenciones) > 0 )
+        {
+            $codigoRegistro = 'C1';
+            $tipoRetencion = '';
+            $tipoImpuesto = '1';
+            $textoResolucion = $this->formatearConEspacios(' ', 20);
+            $codigoPartido = '0137';
+            $tituloRetencion = $this->formatearConEspacios(' ', 30);
 
-                break;
-            case 'RET IVA LOCACION Y PRESTACION SERVICIOS':
-                // no break
-            case 'RET IVA VENTA DE BIENES':
-                // no break
-            case 'RET IVA TASA REDUCIDA 10,5% ':
-                $tipoRetencion = '01';
-                break;
+            $centroEmisor = '0000';
+            $numAgenteRetencion = $this->formatearConCeros('30527990773', 20);
+//        $condicionImpuesto = $pago->IIBB;
+            ( empty($pago->IIBB) ) ? $numIIBB = ' ' : $numIIBB = str_replace('-', '', $pago->IIBB);
+            $numIIBB = $this->formatearConEspacios($numIIBB, 20);
+            $tipoComprobante = '01';
+            $condicionImpuesto = '  ';
+            switch ($pago->CONDICIONIVA) {
+                case 'EXENTO':
+                    $condicionImpuesto = '03';
+                    break;
+                case 'EXENTO FC A':
+                    $condicionImpuesto = '09';
+                    break;
+                case 'EXTERIOR':
+                    $condicionImpuesto = '13';
+                    break;
+                case 'MONOTRIBUTO':
+                    $condicionImpuesto = '11';
+                    break;
+                case 'RESPONSABLE INSCRIPTO':
+                    $condicionImpuesto = '06';
+                    break;
+                case 'RESPONSABLE INSCRIPTO M':
+                    $condicionImpuesto = '06';
+                    break;
+                case 'RET IVA VENTA DE BIENES':
+                    // no break
+                case 'RET IVA TASA REDUCIDA 10,5% ':
+                    $tipoRetencion = '01';
+                    break;
+                default:
+                    $condicionImpuesto = '12';
+            }
+
+
+            foreach($retenciones as $retencion)
+            {
+                switch ($retencion->TIPORETENCION) {
+                    case 'RET GANANCIAS VENTA DE BIENES DE CAMBIO RI':
+                        // no break
+                    case 'RET GANANCIAS LOCACION OBRA Y SERVICIOS':
+                        // no break
+                    case 'RET GANANCIAS FACTURA M':
+                        // no break
+                    case 'RET GANANCIAS HONORARIOS/COMISIONES':
+                        $tipoRetencion = '02';
+                        break;
+                    case 'SERVICIOS DE SEGURIDAD SOCIAL SUSS':
+                        // no break
+                    case 'RET SUSS SERVICIOS DE LIMPIEZA':
+                    // no break
+                    case 'SEG SOCIAL VIGILANCIA':
+                        $tipoRetencion = '04';
+                        break;
+                    case 'RET IVA LOCACION Y PRESTACION SERVICIOS':
+                        // no break
+                    case 'RET IVA VENTA DE BIENES':
+                        // no break
+                    case 'RET IVA 21% (COD 2 AFIPREPROWEB) O FM':
+                        // no break
+                    case 'RET IVA TASA REDUCIDA 10,5% ':
+                        $tipoRetencion = '01';
+                        break;
+                    default:
+                        dd($retencion);
+                }
+
+
+
+                $numeroCertificado = substr(str_replace('-', '', $retencion->NUMERORETENCION), 2);
+
+                $numComprobante = (int)$pago->NUMEROCOMPROBANTE;
+                $numComprobante = $this->formatearConEspacios($numComprobante, 35);
+
+                $fechaRetencion = Carbon::parse($pago->FECHAIMPUTABLE)->format('dmY');
+//            $fechaRetencion = Carbon::today()->format('dmY');
+                $totalRetenido = $this->formatearConCeros($retencion->MONTORETENCION * 100, 17);
+                $declaracionJurada = Carbon::parse($pago->FECHAIMPUTABLE)->format('mY');
+                $relleno = $this->formatearConEspacios(' ', 137);
+                $c1  = $codigoRegistro . $tipoRetencion . $textoResolucion . $tipoImpuesto . $codigoPartido . $tituloRetencion;
+                $c1 .= $centroEmisor . $numeroCertificado . $numAgenteRetencion . $condicionImpuesto . $numIIBB;
+                $c1 .= $tipoComprobante . $numComprobante . $fechaRetencion . $totalRetenido . $declaracionJurada;
+                $c1 .= $relleno . "\n";
+                $lineaC1[] = $c1;
+            }
 
         }
-        $tipoImpuesto = '1';
-        $textoResolucion = $this->formatearConEspacios(' ', 20);
-        $codigoPartido = '0137';
-        $tituloRetencion = $this->formatearConEspacios(' ', 30);
-        $centroEmisor = 'XXXX';
-        $numeroCertificado = '1234567890';
-        $numAgenteRetencion = $this->formatearConEspacios('X123456789X', 20);
-        $condicionImpuesto = 'XX';
-        ( empty($proveedor->IIBB) ) ? $iibb = ' ' : $iibb = $proveedor->IIBB;
-//        ( is_null($proveedor->IIBB) ) ? $iibb = ' ' : $iibb = $proveedor->IIBB;
-        $iibb = $this->formatearConEspacios($iibb, 20);
-        // dd($proveedor);
-        $tipoComprobante = '02';
-        $numComprobante = (int)$fila->NUMEROCOMPROBANTE;
-        $numComprobante = $this->formatearConEspacios($numComprobante, 35);
-        $fechaRetencion = Carbon::today()->format('dmY');
-        $importeRetenido = $fila->MONTORETENCION * 100; // en centavos
-        $importeRetenido = $this->formatearConCeros($importeRetenido, 17);
-        $declaracionJurada = 'MMYYYY';
-        $espacio = $this->formatearConEspacios(' ', 137);
-        $linea  = $codigoRegistro . $tipoRetencion . $textoResolucion . $tipoImpuesto;
-        $linea .= $codigoPartido .  $tituloRetencion . $centroEmisor . $numeroCertificado;
-        $linea .= $numAgenteRetencion . $condicionImpuesto . $iibb . $tipoComprobante . $numComprobante;
-        $linea .= $fechaRetencion . $importeRetenido . $declaracionJurada . $espacio . "\n";
 
-//        $bytes_written = file_put_contents($fullPath, $linea, FILE_APPEND);
-        return $linea;
+        return $lineaC1;
     }
 
 
@@ -419,12 +523,18 @@ class BancoGaliciaController extends Controller
 
     private function escribirLinea($fullPath, $texto)
     {
-        $bytes_written = file_put_contents($fullPath, $texto, FILE_APPEND);
-
-        if ($bytes_written)
+        $bytes_written = 0;
+        if(strlen($texto) > 0 )
         {
-            die('Ocurrió un error al escribir el archivo: ' . $texto);
+            $bytes_written = file_put_contents($fullPath, $texto, FILE_APPEND);
+
+            if (! $bytes_written)
+            {
+//                abort(500, 'Ocurrió un error al escribir la línea: <strong>' . $texto . '</strong>');
+                die('Ocurrió un error al escribir el archivo: ' . $texto);
+            }
         }
+
         return $bytes_written;
     }
     
@@ -448,3 +558,6 @@ class BancoGaliciaController extends Controller
     }
 
 }
+
+
+

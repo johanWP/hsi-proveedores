@@ -53,23 +53,25 @@
             </li>
             @endif
 
-            @if(Auth::user()->can('ver_pagos_todos'))
-            <li class="treeview">
-                <a href="#"><i class='fa fa-usd'></i>
-                    <span>Pagos</span> <i class="fa fa-angle-left pull-right"></i>
-                </a>
-                <ul class="treeview-menu">
-                    <li><a href="{{ url('/pagos/todos') }}">Ver Todos</a></li>
-                    <li><a href="{{ url('/pagos') }}">Mis Pagos</a></li>
-                </ul>
-            </li>
-            @else
-                <li><a href="{{ url('/pagos') }}"><i class='fa fa-usd'></i> <span>Mis Pagos</span></a></li>
-            @endif
+            <li><a href="{{ url('/facturas') }}"><i class='fa fa-file-text'></i> <span>Facturas</span></a></li>
+            {{--@if(Auth::user()->can('ver_pagos_todos'))--}}
+                {{--<li class="treeview">--}}
+                {{--<a href="#"><i class='fa fa-usd'></i>--}}
+                {{--<span>Pagos</span> <i class="fa fa-angle-left pull-right"></i>--}}
+                {{--</a>--}}
+                {{--<ul class="treeview-menu">--}}
+                    {{--<li><a href="{{ url('/pagos/todos') }}">Ver Todos</a></li>--}}
+                    {{--<li><a href="{{ url('/pagos') }}">Mis Pagos</a></li>--}}
+                {{--</ul>--}}
+                {{--</li>--}}
+
+            {{--@else--}}
+                {{--<li><a href="{{ url('/pagos') }}"><i class='fa fa-usd'></i> <span>Mis Pagos</span></a></li>--}}
+            {{--@endif--}}
             {{--<li><a href="#"><i class='fa fa-file-text'></i> <span>Archivos de Pagos</span></a></li>--}}
-            @if(Auth::user()->can('generar_archivo_de_pagos'))
+            @if(Auth::user()->hasRole('admin_proveedores'))
             <li class="treeview">
-                <a href="#"><i class='fa fa-file-text'></i>
+                <a href="#"><i class='fa fa-bank'></i>
                     <span>Archivos de Pagos</span> <i class="fa fa-angle-left pull-right"></i>
                 </a>
                 <ul class="treeview-menu">

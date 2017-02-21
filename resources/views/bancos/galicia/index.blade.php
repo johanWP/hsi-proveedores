@@ -14,10 +14,30 @@ Archivo de Transferencias Banco Galicia
             <div class="col-md-12">
                 <div class="panel panel-default">
                     <div class="panel-body">
+                        <h1>Falta validar las fechas</h1>
                         <div class="col-sm-12" id="divSubmit">
                             {{  Form::open() }}
-                            <p>{{ \Carbon\Carbon::today()->format('d-M-Y') }}</p>
-                            <button class="btn btn-primary" id="btnSubmit">Crear Archivo</button>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        {!! Form::label('fecha_desde', 'Desde:') !!}
+                                        <div class="input-group">
+                                            <span class="input-group-addon" id="basic-addon1"><span class="glyphicon glyphicon-calendar"></span></span>
+                                            {!! Form::text('fecha_desde', null, ['class'=>'form-control pull-right']) !!}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        {!! Form::label('fecha_hasta', 'Hasta:') !!}
+                                        <div class="input-group">
+                                            <span class="input-group-addon" id="basic-addon1"><span class="glyphicon glyphicon-calendar"></span></span>
+                                            {!! Form::text('fecha_hasta', null, ['class'=>'form-control pull-right']) !!}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {!! Form::submit('Crear Archivo de Pago Global', ['class'=>'btn btn-primary']) !!}
                             {{ Form::close() }}
                         </div>
                         <div class="col-sm-12" id="loading" style="display: none">
@@ -32,14 +52,27 @@ Archivo de Transferencias Banco Galicia
 @endsection
 
 @section('otros-scripts')
+<link href="/plugins/datepicker/datepicker3.css" rel="stylesheet" type="text/css" />
+<script src="/plugins/datepicker/bootstrap-datepicker.js"></script>
 <script>
     $(function() {
-//        $('#loading').hide();
         $('#btnSubmit').on('click', function(){
-//            $('#loading').show();
             $('#loading').attr('style', '');
             $('#divSubmit').hide();
         });
+
+        $('#fecha_desde').datepicker({
+            autoclose: true,
+            format: "yyyy-mm-dd",
+            endDate: '0d'   // no se puede seleccionar una fecha después de hoy
+        });
+
+        $('#fecha_hasta').datepicker({
+            autoclose: true,
+            format: "yyyy-mm-dd",
+            endDate: '0d'   // no se puede seleccionar una fecha después de hoy
+        });
+
     });
 </script>
 @endsection

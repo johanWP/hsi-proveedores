@@ -17,7 +17,7 @@
 
 					<div class="panel-body">
 						{{ trans('adminlte_lang::message.logged') }}
-						{{ Auth::user()->can('ver_pagos_todos') }} <<
+						>> {{ Auth::user()->can('generar_archivo_de_pagos') }} <<
 					</div>
 				</div>
 			</div>
