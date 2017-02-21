@@ -1,3 +1,4 @@
+
 @extends('adminlte::layouts.app')
 
 @section('htmlheader_title')
@@ -9,6 +10,11 @@
 @endsection
 
 @section('main-content')
+	@if(Auth::user()->hasRole('proveedor') == '')
+		<script type="text/javascript">
+			window.location = "{{ url('/facturas') }}";
+		</script>
+	@endif
 	<div class="container-fluid spark-screen">
 		<div class="row">
 			<div class="col-md-12">
@@ -17,7 +23,7 @@
 
 					<div class="panel-body">
 						{{ trans('adminlte_lang::message.logged') }}
-						>> {{ Auth::user()->can('generar_archivo_de_pagos') }} <<
+						>> {{  Auth::user()->hasRole('proveedor')}}. <<
 					</div>
 				</div>
 			</div>

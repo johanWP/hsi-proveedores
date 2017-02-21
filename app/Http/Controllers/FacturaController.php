@@ -18,13 +18,12 @@ class FacturaController extends Controller
      */
     public function index()
     {
-        $param = '';
         $header = 'Mis Facturas';
-        $cuit = '';
         $user = Auth::user();
+        $param = $this->PonerGuionesAlCuit($user->cuit);
         if($user->hasPermissionTo('ver_pagos_todos'))
         {
-            $param = 'all';
+            $param = '';
             $header = 'Todas las Facturas';
             $query = 'SELECT cuit, razonSocial from web_proveedores_jockey';
             $proveedores = collect(DB::connection('firebird')->select($query))->pluck('RAZONSOCIAL', 'CUIT')->toArray();
@@ -43,8 +42,8 @@ class FacturaController extends Controller
     {
         $numComprobante = (int)$numComprobante;
         $cuit = strip_tags($cuit);
-        $query = "SELECT * from web_movimientosPorProveedor WHERE numeroComprobante = " . $numComprobante ." 
-            AND cuit = '" . $cuit . "'";
+        $query = "SELECT * from web_movimientosPorProveedor WHERE numeroComprobante = " . $numComprobante . 
+            " AND cuit = '" . $cuit . "'";
         $factura = collect(DB::connection('firebird')->select($query))->first();
 //        $factura = $this->FormatearDetalleDePago($factura);
         return view('facturas.show', compact('factura'));

@@ -33,7 +33,7 @@
         <ul class="sidebar-menu">
             <li class="header">{{-- trans('adminlte_lang::message.header') --}}MENU</li>
             <!-- Optionally, you can add icons to the links -->
-            @if(! Auth::user()->hasRole('proveedor'))
+            @if(Auth::user()->hasRole('proveedor') != '')
                 <li class="active"><a href="{{ url('home') }}"><i class='fa fa-home'></i>
                         <span>{{ trans('adminlte_lang::message.home') }}</span></a>
                 </li>

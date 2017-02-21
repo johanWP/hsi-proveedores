@@ -17,5 +17,6 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:api');
 
+Route::get('/facturas/{cuit?}', 'FacturaController@anyData');
 Route::get('/facturas/{cuit}/{numComprobante}', 'FacturaController@apiFacturas');
 Route::get('/pagos/{numPago}', 'PaymentController@apiShow');

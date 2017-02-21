@@ -60,11 +60,12 @@
     <script>
         $(function() {
             $('#cuit').select2();
+
             var table = $('#facturas-table').DataTable({
                 processing: true,
                 serverSide: true,
-                ajax: '/api/facturas/',
-                "language": {
+                ajax: '/api/facturas/{{ $param }}',
+                language: {
                     processing: "Espera...",
                     search: "Buscar:&nbsp;",
                     info:   "Mostrando registros _START_ a _END_ de _TOTAL_ en total",
@@ -119,6 +120,8 @@
                     }]
             });
 
+{{--            var param = '{{ $param }}';--}}
+            table.ajax.url( '/api/facturas/{{ $param }}').load();
 
 /** Cada vez que se postea el form, se actualiza la tabla **/
             $('#frmCuit').submit(function(e){
