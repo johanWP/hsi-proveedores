@@ -16,5 +16,4 @@ class UsuariosTest extends TestCase
         $this->assertTrue(true);
     }
 
-
 }

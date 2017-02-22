@@ -69,7 +69,7 @@ class AcachaAdminLTELaravelTest extends TestCase
     public function testLoginPage()
     {
         $this->visit('/login')
-            ->see('Inicia sesión para acceder');
+            ->see('Ingrese su número de CUIT');
     }
 
     /**
@@ -85,8 +85,7 @@ class AcachaAdminLTELaravelTest extends TestCase
             ->type($user->cuit, 'cuit')
             ->type('123456', 'password')
             ->press('Iniciar Sesión')
-            ->seePageIs('/home')
-            ->see($user->name);
+            ->seePageIs('/facturas');
     }
 
     /**
@@ -166,8 +165,7 @@ class AcachaAdminLTELaravelTest extends TestCase
     public function test404Page()
     {
         $this->get('asdasdjlapmnnk')
-            ->seeStatusCode(500)
-            ->see('Whoops, looks like something went wrong.');
+            ->seeStatusCode(404);
     }
 
 
