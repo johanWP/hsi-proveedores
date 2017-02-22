@@ -37,6 +37,5 @@ Route::group(['middleware' => ['auth']], function () {
     // ********** Ver facturas
     Route::get('/facturas/', 'FacturaController@index');  // Todos los pagos del usuario logueado
     Route::get('/facturas/{cuit}/{numComprobante}', 'FacturaController@show');  // ver detalle de factura
-
-
+    
 });

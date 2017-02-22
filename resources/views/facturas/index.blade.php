@@ -20,7 +20,9 @@
                             <div class="form-group">
                                 {{ Form::label('cuit', 'Razón social del Proveedor: ') }}
                                 {{ Form::select('cuit', $proveedores, null,
-                                    ['style'=>'width:300px', 'placeholder' => 'Seleccione...', 'class' => 'form-control'])
+                                    ['style'=>'width:300px',
+                                    'placeholder' => 'Seleccione...',
+                                    'class' => 'form-control'])
                                 }}
                             </div>
                         {{ Form::submit('Buscar', ['class' => 'btn btn-default']) }}
@@ -70,6 +72,10 @@
                     search: "Buscar:&nbsp;",
                     info:   "Mostrando registros _START_ a _END_ de _TOTAL_ en total",
                     lengthMenu:    "Mostrar _MENU_ facturas",
+                    aria: {
+                        sortAscending:  ": activer pour trier la colonne par ordre croissant",
+                        sortDescending: ": activer pour trier la colonne par ordre décroissant"
+                    },
                     paginate: {
                         first: "Primero",
                         previous: "Anterior",

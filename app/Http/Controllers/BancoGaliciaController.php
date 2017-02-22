@@ -75,6 +75,8 @@ class BancoGaliciaController extends Controller
                 $fc = '';
                 $o1 = '';
                 $me = '';
+                $lineaC1 = '';
+                $lineaC2 = '';
                 $retenciones = '';
 
                 $comprobantes = $filas->where('NUMEROPAGO', $pago->NUMEROPAGO)->unique('NUMEROCOMPROBANTE');
@@ -111,8 +113,26 @@ class BancoGaliciaController extends Controller
                 fwrite($file, $o1); //  Registro de Orden de pago
                 fwrite($file, $fc); //  Registro de documento (Facturas pagadas)
                 $lineaC1 = $this->crearLineaC1($pago, $retenciones);
-                foreach ($lineaC1 as $c1){
-                    fwrite($file, $c1); //  Comprobantes de retencion
+                $lineaC2 = $this->crearLineaC2($retenciones);
+
+                if (count($lineaC1) > 0)
+                {
+                    try{
+                        foreach ($lineaC1 as $c1)
+                        {
+                            fwrite($file, $c1); //  Comprobantes de retencion
+//                            fwrite($file, $lineaC2[$i]); //  Comprobantes de retencion
+
+                        }
+
+                    } catch(\ErrorException $e) {
+                        print_r(count($lineaC1));
+                        print_r($pago);
+                        print_r($lineaC1);
+//                        print_r($lineaC2);
+                        die($e);
+
+                    }
                 }
                 fwrite($file, $me); //  Dirección de email del proveedor
                 
@@ -199,15 +219,14 @@ class BancoGaliciaController extends Controller
     {
         $lineaME = '';
         $codigoRegistro = 'ME';
-        $arrPago = collect($pago)->toArray();
+        $arrPago = collect($pago)->toArray();   // esta vuelta es innecesaria, mejorar
         $validator = Validator::make($arrPago, [
             'EMAIL' => 'required|email',
         ]);
 
         if (! $validator->fails())
         {
-//            dd($arrPago['EMAIL']);
-            $email = $this->formatearConEspacios($arrPago['EMAIL'], 320);
+            $email = $this->formatearConEspacios($arrPago['EMAIL'], 318);
             $lineaME = $codigoRegistro . $email . "\n";
         }
 
@@ -270,23 +289,21 @@ class BancoGaliciaController extends Controller
         $condicionPago = $this->formatearConEspacios('Pago por transferencia', 30);
 
 
-        $relleno = $this->formatearConCeros('0', 19);
+        $relleno = $this->formatearConCeros('0', 209);
 
-        $espacio = $this->formatearConEspacios(' ', 209);
-
+//        $espacio = $this->formatearConEspacios(' ', 19);
+$espacio='';
         $linea =  $codigoRegistro . $numeroPago . $totalFacturas . $totalNotasDebito . $totalNotasCredito;
-        $linea .= $importePagar . $signo . $condicionPago . $concepto_importe . $espacio . "\n";
+        $linea .= $importePagar . $signo . $condicionPago . $relleno . $espacio . "\n";
         return $linea;
     }
 
     /**
      * Crea las líneas FC, que corresponden a las facturas que se pagan con la transferencia actual
-     * @param String $fullPath
-     * @param Collection $fila
-     * @param Collection $filas
+     * @param Collection $comprobantes
+     * @param Collection $retenciones
      * @return Collection $arrFc Arreglo con todas las lineas a escribir
      */
-//    private function crearLineaFC($facturas, $notasCredito, $notasDebito, $retenciones)
     private function crearLineaFC($comprobantes, $retenciones)
     {
         $arrFc = array();
@@ -361,7 +378,7 @@ class BancoGaliciaController extends Controller
      * Crea la línea para el comprobante de retencion
      * @param Collection $pago
      * @param Collection $retenciones
-     * @return Array
+     * @return array
      */
     private function crearLineaC1($pago,  $retenciones)
     {
@@ -377,7 +394,6 @@ class BancoGaliciaController extends Controller
 
             $centroEmisor = '0000';
             $numAgenteRetencion = $this->formatearConCeros('30527990773', 20);
-//        $condicionImpuesto = $pago->IIBB;
             ( empty($pago->IIBB) ) ? $numIIBB = ' ' : $numIIBB = str_replace('-', '', $pago->IIBB);
             $numIIBB = $this->formatearConEspacios($numIIBB, 20);
             $tipoComprobante = '01';
@@ -440,18 +456,15 @@ class BancoGaliciaController extends Controller
                         $tipoRetencion = '01';
                         break;
                     default:
-                        dd($retencion);
+                        dd('Hay retenciones que no están contempladas.  Por favor, revisar.');
                 }
 
 
 
                 $numeroCertificado = substr(str_replace('-', '', $retencion->NUMERORETENCION), 2);
-
                 $numComprobante = (int)$pago->NUMEROCOMPROBANTE;
                 $numComprobante = $this->formatearConEspacios($numComprobante, 35);
-
                 $fechaRetencion = Carbon::parse($pago->FECHAIMPUTABLE)->format('dmY');
-//            $fechaRetencion = Carbon::today()->format('dmY');
                 $totalRetenido = $this->formatearConCeros($retencion->MONTORETENCION * 100, 17);
                 $declaracionJurada = Carbon::parse($pago->FECHAIMPUTABLE)->format('mY');
                 $relleno = $this->formatearConEspacios(' ', 137);
@@ -459,7 +472,20 @@ class BancoGaliciaController extends Controller
                 $c1 .= $centroEmisor . $numeroCertificado . $numAgenteRetencion . $condicionImpuesto . $numIIBB;
                 $c1 .= $tipoComprobante . $numComprobante . $fechaRetencion . $totalRetenido . $declaracionJurada;
                 $c1 .= $relleno . "\n";
-                $lineaC1[] = $c1;
+
+
+//                $numeroCertificado = substr(str_replace('-', '', $retencion->NUMERORETENCION), 2);
+                $conceptoRetencion = $this->formatearConEspacios($retencion->TIPORETENCION, 30);
+                $tipoImporte = '04';
+                $signoImporte= '1';
+                $importe = $this->formatearConCeros($retencion->MONTORETENCION * 100, 17);
+                $relleno = $this->formatearConCeros('0', 100);
+                $espacioLibre = $this->formatearConEspacios(' ', 154);
+                $c2 = 'C2' . $centroEmisor . $numeroCertificado . $conceptoRetencion . $tipoImporte;
+                $c2 .= $signoImporte . $importe . $relleno . $espacioLibre . "\n";
+//                $lineaC2[] = $c2;
+
+                $lineaC1[] = $c1 . $c2;
             }
 
         }
@@ -467,7 +493,32 @@ class BancoGaliciaController extends Controller
         return $lineaC1;
     }
 
+    /**
+     * Genera el detalle del comprobante de retenciones
+     * @param Collection $retenciones
+     * @return array
+     */
+    public function crearLineaC2($retenciones)
+    {
+        $codigoRegistro = 'C2';
+        $centroEmisor = '0000';
+        $lineaC2 = array();
+        foreach($retenciones as $retencion)
+        {
+            $numeroCertificado = substr(str_replace('-', '', $retencion->NUMERORETENCION), 2);
+            $conceptoRetencion = $this->formatearConEspacios($retencion->TIPORETENCION, 30);
+            $tipoImporte = '04';
+            $signoImporte= '1';
+            $importe = $this->formatearConCeros($retencion->MONTORETENCION * 100, 17);
+            $relleno = $this->formatearConCeros('0', 95);
+            $espacioLibre = $this->formatearConEspacios(' ', 154);
+            $c2 = $codigoRegistro . $centroEmisor . $numeroCertificado . $conceptoRetencion . $tipoImporte;
+            $c2 .= $signoImporte . $importe . $relleno . $espacioLibre;
+            $lineaC2[] = $c2;
+        }
+        return $lineaC2;
 
+    }
     /**
      * Completa con espacios hasta que $str tenga el largo especificado en $espacios o recorta si es más largo
      * @param $str String original
