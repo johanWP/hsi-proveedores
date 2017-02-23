@@ -8,7 +8,7 @@ use App\User;
  */
 class AcachaAdminLTELaravelTest extends TestCase
 {
-    use DatabaseMigrations;
+//    use DatabaseMigrations;
 
     /*
      * Overwrite createApplication to add Http Kernel

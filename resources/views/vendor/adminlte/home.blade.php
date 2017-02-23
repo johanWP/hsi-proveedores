@@ -10,7 +10,7 @@
 @endsection
 
 @section('main-content')
-	@if(Auth::user()->hasRole('proveedor') == '')
+	@if(Auth::user()->hasRole('proveedor'))
 		<script type="text/javascript">
 			window.location = "{{ url('/facturas') }}";
 		</script>
@@ -23,7 +23,6 @@
 
 					<div class="panel-body">
 						{{ trans('adminlte_lang::message.logged') }}
-						>> {{  Auth::user()->hasRole('proveedor')}}. <<
 					</div>
 				</div>
 			</div>

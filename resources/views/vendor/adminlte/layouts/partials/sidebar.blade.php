@@ -33,17 +33,17 @@
         <ul class="sidebar-menu">
             <li class="header">{{-- trans('adminlte_lang::message.header') --}}MENU</li>
             <!-- Optionally, you can add icons to the links -->
-            @if(Auth::user()->hasRole('proveedor') != '')
+            @if(! Auth::user()->hasRole('proveedor'))
                 <li class="active"><a href="{{ url('home') }}"><i class='fa fa-home'></i>
                         <span>{{ trans('adminlte_lang::message.home') }}</span></a>
                 </li>
             @endif
 
-            @if(Auth::user()->can('ver_otros_usuarios'))
+            @if(Auth::user()->hasPermissionTo('ver_otros_usuarios'))
                 <li><a href="{{ url('/usuarios') }}"><i class='fa fa-users'></i> <span>Usuarios</span></a></li>
             @endif
 
-            @if(Auth::user()->can('dar_permisos'))
+            @if(Auth::user()->hasPermissionTo('dar_permisos'))
             <li class="treeview">
                 <a href="#"><i class='fa fa-key'></i> <span>Roles & Permisos</span> <i class="fa fa-angle-left pull-right"></i></a>
                 <ul class="treeview-menu">
@@ -54,22 +54,7 @@
             @endif
 
             <li><a href="{{ url('/facturas') }}"><i class='fa fa-file-text'></i> <span>Facturas</span></a></li>
-            {{--@if(Auth::user()->can('ver_pagos_todos'))--}}
-                {{--<li class="treeview">--}}
-                {{--<a href="#"><i class='fa fa-usd'></i>--}}
-                {{--<span>Pagos</span> <i class="fa fa-angle-left pull-right"></i>--}}
-                {{--</a>--}}
-                {{--<ul class="treeview-menu">--}}
-                    {{--<li><a href="{{ url('/pagos/todos') }}">Ver Todos</a></li>--}}
-                    {{--<li><a href="{{ url('/pagos') }}">Mis Pagos</a></li>--}}
-                {{--</ul>--}}
-                {{--</li>--}}
-
-            {{--@else--}}
-                {{--<li><a href="{{ url('/pagos') }}"><i class='fa fa-usd'></i> <span>Mis Pagos</span></a></li>--}}
-            {{--@endif--}}
-            {{--<li><a href="#"><i class='fa fa-file-text'></i> <span>Archivos de Pagos</span></a></li>--}}
-            @if(Auth::user()->can('generar_archivo_de_pagos'))
+            @if(Auth::user()->hasPermissionTo('generar_archivo_de_pagos'))
             <li class="treeview">
                 <a href="#"><i class='fa fa-bank'></i>
                     <span>Archivos de Pagos</span> <i class="fa fa-angle-left pull-right"></i>
