@@ -48,28 +48,26 @@ class ImportProveedoresFlexxus extends Command
         $error = 0; $creados = 0;
         try
         {
-//            $query = "select count(*) as total from " . $this->tabla;
             $query = "select count(*) as total from " . $this->tabla . " WHERE TRIM(CUIT) != ''";
             $registros = collect(DB::connection('firebird')->select($query))
                 ->first();
             $this->info('Total de proveedores: '. $registros->TOTAL);
             $bar = $this->output->createProgressBar($registros->TOTAL);
-//            $query = "SELECT first 10 * FROM " . $this->tabla;
             $query = "SELECT * FROM " . $this->tabla ." WHERE TRIM(CUIT) != ''";
             $proveedores = DB::connection('firebird')->select($query);
             foreach ($proveedores as $fila)
             {
-                if ( $this->crearUsuario( $fila ) )
+                if ($this->crearUsuario($fila))
                 {
-                    $this->crearPerfil( $fila );
+//                    $this->crearPerfil($fila);
                     $creados++;
                 } else {
                     $error++;
                 }
                 $bar->advance();
             }
-            $this->info($creados. ' usuarios se actualizaron / crearon.');
-            $this->error($error . ' usuarios no se crearon.');
+            $this->info("\r\n" . $creados. ' usuarios se actualizaron / crearon.');
+            $this->error($error . ' usuarios no tienen email y no se crearon.');
         } catch (\Illuminate\Database\QueryException $e)
         {
             $this->error($e->getMessage());
@@ -78,29 +76,38 @@ class ImportProveedoresFlexxus extends Command
         }
     }
 
-    private function crearUsuario( $data )
+    /**
+     * Inserta un nuevo usuario o actualiza el usuario existente, basado en el CUIT
+     * @param array $data
+     * @return bool
+     */
+    private function crearUsuario($data)
     {
-        try {
+        try
+        {
             $req = collect($data)->toArray();
             $v = Validator::make($req, [
-                'CUIT' => 'required|alpha_dash',
-                'RAZONSOCIAL' => 'required|max:255',
-                'EMAIL' => 'required|email'
+                'CUIT'          => 'required|alpha_dash',
+                'RAZONSOCIAL'   => 'required|max:255',
+                'EMAIL'         => 'required|email'
             ]);
-//            foreach(mb_list_encodings() as $chr){
-//                $this->info( mb_convert_encoding($data->RAZONSOCIAL, 'UTF-8', $chr)." : ".$chr."<br>");
-//            }
-            if ( ! $v->fails() ) {
+
+            if (! $v->fails())
+            {
                 $cuit = str_replace('-', '', $data->CUIT);
                 $user = User::updateOrCreate(
                     ['cuit' => $cuit],
                     [
                         'name' => utf8_encode($data->RAZONSOCIAL),
-                        'cuit' => $cuit,
-                        'email' => $data->EMAIL,
+                        'cuit' => utf8_encode($cuit),
+                        'email' => utf8_encode($data->EMAIL),
                         'password' => bcrypt('x_PASSWORD_x')
                     ]
                 );
+                if(! $user->hasRole('proveedor'))
+                {
+                    $user->assignRole('proveedor');
+                }
                 return $user;
             } else {
                 return false;

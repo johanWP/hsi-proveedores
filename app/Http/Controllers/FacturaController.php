@@ -67,7 +67,11 @@ class FacturaController extends Controller
 
         } else {
             $cuit = strip_tags($param);
-            $query = "SELECT * FROM web_movimientosPorProveedor WHERE cuit = '" . $cuit . "'";
+            $query = "SELECT cuit, razonSocial, fechaComprobante, fechaImputable, 
+              tipoComprobante, numeroComprobante, total 
+              FROM web_movimientosPorProveedor 
+              WHERE cuit = '" . $cuit . "'   
+              ORDER BY fechaComprobante";
             $facturas = collect(DB::connection('firebird')->select($query));
 
             $query = "SELECT * FROM web_detPagoProveedores_jockey WHERE cuit = '" . $cuit . "'
@@ -86,20 +90,23 @@ class FacturaController extends Controller
             }
 
         }
-        return Datatables::of($this->FormatearDetalleDePago($facturas))->make(true);
+        return Datatables::of($this->FormatearDetalleDePago($facturas))
+            ->filterColumn('fechaImputable', function ($query, $keyword) {
+                $query->whereRaw("DATE_FORMAT(fechaImputable,'%d-%m/%Y') like ?", ["%$keyword%"]);
+            })->make(true);
     }
 
     public function apiFacturas($cuit, $numComprobante)
     {
-        $numComprobante = (int)$numComprobante;
-        $cuit = strip_tags($cuit);
-        $query = "SELECT * from web_movimientosPorProveedor WHERE numeroComprobante = " . $numComprobante ." 
-            AND cuit = '" . $cuit . "'";
-        $factura = collect(DB::connection('firebird')->select($query))->first();
-        $factura->FECHAIMPUTABLE = Carbon::parse($factura->FECHAIMPUTABLE)->format('d-m-Y');
-        $factura->FECHACOMPROBANTE = Carbon::parse($factura->FECHACOMPROBANTE)->format('d-m-Y');
-        $factura->TOTAL = number_format( (float)$factura->TOTAL, 2, ',', '.' );
-        return json_encode($factura);
+//        $numComprobante = (int)$numComprobante;
+//        $cuit = strip_tags($cuit);
+//        $query = "SELECT * from web_movimientosPorProveedor WHERE numeroComprobante = " . $numComprobante ."
+//            AND cuit = '" . $cuit . "' ORDER BY fechaComprobante";
+//        $factura = collect(DB::connection('firebird')->select($query))->first();
+//        $factura->FECHAIMPUTABLE = Carbon::parse($factura->FECHAIMPUTABLE)->format('d-m-Y');
+//        $factura->FECHACOMPROBANTE = Carbon::parse($factura->FECHACOMPROBANTE)->format('d-m-Y');
+//        $factura->TOTAL = number_format( (float)$factura->TOTAL, 2, ',', '.' );
+//        return json_encode($factura);
     }
 
 }

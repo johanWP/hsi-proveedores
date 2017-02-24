@@ -29,9 +29,9 @@ trait FormatFirebirdTrait {
         isset($fila->EFECTIVO) ? $fila->EFECTIVO = number_format( (float)$fila->EFECTIVO, 2, ',', '.' ): $fila->EFECTIVO = null;
         isset($fila->NOMBREBENEFICIARIO) ? $fila->NOMBREBENEFICIARIO = utf8_encode( $fila->NOMBREBENEFICIARIO ): $fila->NOMBREBENEFICIARIO = null;
         isset($fila->MONTOCHEQUE) ? $fila->MONTOCHEQUE = number_format( (float)$fila->MONTOCHEQUE, 2, ',', '.' ): $fila->MONTOCHEQUE = null;
-        isset($fila->FECHACHEQUE) ? $fila->FECHACHEQUE = date( "d-m-Y", strtotime($fila->FECHACHEQUE) ): $fila->FECHACHEQUE = null;
-        isset($fila->FECHACOMPROBANTE) ? $fila->FECHACOMPROBANTE = date( "d-m-Y", strtotime($fila->FECHACOMPROBANTE) ): $fila->FECHACOMPROBANTE = null;
-        isset($fila->FECHAIMPUTABLE) ? $fila->FECHAIMPUTABLE = date( "d-m-Y", strtotime($fila->FECHAIMPUTABLE) ): $fila->FECHAIMPUTABLE = null;
+        isset($fila->FECHACHEQUE) ? $fila->FECHACHEQUE = date( "Y-m-d", strtotime($fila->FECHACHEQUE) ): $fila->FECHACHEQUE = null;
+        isset($fila->FECHACOMPROBANTE) ? $fila->FECHACOMPROBANTE = date( "Y-m-d", strtotime($fila->FECHACOMPROBANTE) ): $fila->FECHACOMPROBANTE = null;
+        isset($fila->FECHAIMPUTABLE) ? $fila->FECHAIMPUTABLE = date( "Y-m-d", strtotime($fila->FECHAIMPUTABLE) ): $fila->FECHAIMPUTABLE = null;
         isset($fila->NUMEROCOMPROBANTE) ? $fila->NUMEROCOMPROBANTE = (int)$fila->NUMEROCOMPROBANTE: $fila->NUMEROCOMPROBANTE = null;
         isset($fila->MONTOTRANSFERENCIA) ? $fila->MONTOTRANSFERENCIA = number_format( (float)$fila->MONTOTRANSFERENCIA, 2, ',', '.' ): $fila->MONTOTRANSFERENCIA = null;
         isset($fila->MONTORETENCION) ? $fila->MONTORETENCION = number_format( (float)$fila->MONTORETENCION, 2, ',', '.' ): $fila->MONTORETENCION = null;

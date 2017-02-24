@@ -1,6 +1,6 @@
 <?php
 
-use Illuminate\Foundation\Testing\DatabaseMigrations;
+
 use Illuminate\Support\Facades\Hash;
 use App\User;
 /**
@@ -8,7 +8,6 @@ use App\User;
  */
 class AcachaAdminLTELaravelTest extends TestCase
 {
-//    use DatabaseMigrations;
 
     /*
      * Overwrite createApplication to add Http Kernel
@@ -149,7 +148,9 @@ class AcachaAdminLTELaravelTest extends TestCase
     {
 //        $user = factory(App\User::class)->create();
         $user = App\User::find(1);
-        $form = $this->actingAs($user)->visit('/home')->getForm('logout');
+        $form = $this->actingAs($user)
+            ->visit('/home')
+            ->getForm('logout');
 
         $this->actingAs($user)
             ->visit('/home')

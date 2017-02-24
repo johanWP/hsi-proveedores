@@ -32,9 +32,9 @@
                         <table class="table" id="facturas-table">
                             <thead>
                             <tr>
-                                <th>CUIT Proveedor</th>
-                                <th>Razón Social</th>
-                                <th>Número de Factura</th>
+                                <th style="width: 20%;">Fecha del Comprobante</th>
+                                <th style="width: 20%;">Fecha imputable</th>
+                                <th>Número de Comprobante</th>
                                 <th style="text-align: right">Total Comprobante</th>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
@@ -84,8 +84,8 @@
                     }
                 },
                 columns: [
-                    { data: 'CUIT', name: 'CUIT' },
-                    { data: 'RAZONSOCIAL', name: 'RAZONSOCIAL' },
+                    { data: 'FECHACOMPROBANTE', name: 'FECHACOMPROBANTE' },
+                    { data: 'FECHAIMPUTABLE', name: 'FECHAIMPUTABLE' },
                     { data: 'NUMEROCOMPROBANTE', name: 'NUMEROCOMPROBANTE' },
                     { data: 'TOTAL', name: 'TOTAL' }
                 ],
