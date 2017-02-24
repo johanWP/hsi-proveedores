@@ -100,8 +100,7 @@ class ImportProveedoresFlexxus extends Command
                     [
                         'name' => utf8_encode($data->RAZONSOCIAL),
                         'cuit' => utf8_encode($cuit),
-                        'email' => utf8_encode($data->EMAIL),
-                        'password' => bcrypt('x_PASSWORD_x')
+                        'email' => utf8_encode($data->EMAIL)
                     ]
                 );
                 if(! $user->hasRole('proveedor'))
