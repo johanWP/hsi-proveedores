@@ -52,7 +52,7 @@
                 <table class="table table-condensed table-striped" id="tablaCheques" name="cheques">
                     <thead>
                     <tr>
-                        <th><p><strong>Fecha: </strong></p></th>
+                        <th><p><strong>Fecha de emisión: </strong></p></th>
                         <th><p><strong>Número de Cheque: </strong></p></th>
                         <th><p><strong>A Nombre de: </strong></p></th>
                         <th><p><strong>Monto: </strong></p></th>
