@@ -33,10 +33,10 @@
                             <thead>
                             <tr>
                                 <th style="width: 20%;">Fecha del Comprobante</th>
-                                <th style="width: 20%;">Fecha imputable</th>
+                                <th style="width: 20%;">Tipo de Comprobante</th>
                                 <th>Número de Comprobante</th>
                                 <th style="text-align: right">Total Comprobante</th>
-                                <th>&nbsp;</th>
+                                {{--<th>&nbsp;</th>--}}
                                 <th>&nbsp;</th>
                             </tr>
                             </thead>
@@ -85,36 +85,35 @@
                 },
                 columns: [
                     { data: 'FECHACOMPROBANTE', name: 'FECHACOMPROBANTE' },
-                    { data: 'FECHAIMPUTABLE', name: 'FECHAIMPUTABLE' },
+                    { data: 'TIPOCOMPROBANTE', name: 'TIPOCOMPROBANTE' },
                     { data: 'NUMEROCOMPROBANTE', name: 'NUMEROCOMPROBANTE' },
                     { data: 'TOTAL', name: 'TOTAL' }
                 ],
                 columnDefs: [{
-                    "targets": [4],
-                    "mData": null,
-                    "sortable": false,
-                    "searchable": false,
-                    "mRender": function(data) {
-                        var botones;
-                        botones = '<button type="button" data-toggle="modal" data-target="#modalFactura"' +
-                                ' class="btn btn-sm btn-default" data-cuit="'+ data['CUIT'] +
-                                '" data-numcomprobante="'+ data['NUMEROCOMPROBANTE'] +
-                                '" data-fechaimputable="'+ data['FECHAIMPUTABLE'] +
-                                '" data-fechacomprobante="'+ data['FECHACOMPROBANTE'] +
-                                '" data-tipocomprobante="'+ data['TIPOCOMPROBANTE'] +
-                                '" data-total  ="'+ data['TOTAL'] +
-                                '">Ver factura</button>';
-
-                        return  botones;
-                    }
-                },
-                    {
-                        "targets": [5],
+//                    "targets": [4],
+//                    "mData": null,
+//                    "sortable": false,
+//                    "searchable": false,
+//                    "mRender": function(data) {
+//                        var botones;
+//                        botones = '<button type="button" data-toggle="modal" data-target="#modalFactura"' +
+//                                ' class="btn btn-sm btn-default" data-cuit="'+ data['CUIT'] +
+//                                '" data-numcomprobante="'+ data['NUMEROCOMPROBANTE'] +
+//                                '" data-fechaimputable="'+ data['FECHAIMPUTABLE'] +
+//                                '" data-fechacomprobante="'+ data['FECHACOMPROBANTE'] +
+//                                '" data-tipocomprobante="'+ data['TIPOCOMPROBANTE'] +
+//                                '" data-total  ="'+ data['TOTAL'] +
+//                                '">Ver factura</button>';
+//
+//                        return  botones;
+//                    }
+//                },
+//                    {
+                        "targets": [4],
                         "mData": null,
                         "sortable": false,
                         "searchable": false,
                         "mRender": function(data) {
-                            var botones;
                             var pago = '';
                             if(data['NUMEROPAGO'] != null)
                             {
