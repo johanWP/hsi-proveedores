@@ -42,12 +42,12 @@
                 </div>
 
                 <div class="form-group has-feedback">
-                    <input type="password" class="form-control" placeholder="Password" name="password"/>
+                    <input type="password" class="form-control" placeholder="Contraseña" name="password"/>
                     <span class="glyphicon glyphicon-lock form-control-feedback"></span>
                 </div>
 
                 <div class="form-group has-feedback">
-                    <input type="password" class="form-control" placeholder="Password" name="password_confirmation"/>
+                    <input type="password" class="form-control" placeholder="Confirme su contraseña" name="password_confirmation"/>
                     <span class="glyphicon glyphicon-lock form-control-feedback"></span>
                 </div>
 
@@ -61,9 +61,9 @@
                     </div><!-- /.col -->
                 </div>
             </form>
-
-            <a href="{{ url('/login') }}">Log in</a><br>
-            <a href="{{ url('/register') }}" class="text-center">{{ trans('adminlte_lang::message.membreship') }}</a>
+            <br>
+            <p><a href="{{ url('/login') }}">Ingresar al sistema</a></p>
+{{--            <a href="{{ url('/register') }}" class="text-center">{{ trans('adminlte_lang::message.membreship') }}</a>--}}
 
         </div><!-- /.login-box-body -->
 
@@ -84,3 +84,19 @@
     </body>
 
 @endsection
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

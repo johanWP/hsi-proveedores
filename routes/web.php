@@ -12,6 +12,9 @@
 */
 
 Route::get('/', 'HomeController@index');
+Route::get('/ayuda', function(){
+    return view('ayuda');
+});
 
 Route::group(['middleware' => ['auth']], function () {
 

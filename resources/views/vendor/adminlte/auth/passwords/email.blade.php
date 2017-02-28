@@ -1,7 +1,7 @@
 @extends('adminlte::layouts.auth')
 
 @section('htmlheader_title')
-    Password recovery
+    Restablecer contraseña
 @endsection
 
 @section('content')
@@ -51,7 +51,10 @@
                 </div>
             </form>
 
-            <p><br><a href="{{ url('/login') }}">Ingresar al sistema</a><br></p>
+            <p><br><a href="{{ url('/login') }}">Ingresar al sistema</a><br>
+                <a href="{{ url('/Sistema Proveedores - Manual de ingreso v1.pdf') }}">Ayuda</a>
+
+            </p>
             {{--<a href="{{ url('/register') }}" class="text-center">{{ trans('adminlte_lang::message.registermember') }}</a>--}}
 
         </div><!-- /.login-box-body -->
