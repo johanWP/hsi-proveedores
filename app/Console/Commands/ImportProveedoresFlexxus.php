@@ -18,7 +18,8 @@ class ImportProveedoresFlexxus extends Command
      * @var string
      */
     protected $signature = 'flexxus:proveedores';
-
+    protected $creados;
+    protected $actualizados;
     /**
      * The console command description.
      *
@@ -36,7 +37,8 @@ class ImportProveedoresFlexxus extends Command
     public function __construct()
     {
         parent::__construct();
-        
+        $this->creados = 0;
+        $this->actualizados = 0;
     }
 
     /**
@@ -61,13 +63,13 @@ class ImportProveedoresFlexxus extends Command
                 if ($this->crearUsuario($fila))
                 {
 //                    $this->crearPerfil($fila);
-                    $creados++;
                 } else {
                     $error++;
                 }
                 $bar->advance();
             }
-            $this->info("\r\n" . $creados. ' usuarios se actualizaron / crearon.');
+            $this->info("\r\n" . $this->creados. ' usuarios crearon.');
+            $this->info("\r\n" . $this->actualizados. ' usuarios se actualizaron.');
             $this->error($error . ' usuarios no tienen email y no se crearon.');
         } catch (\Illuminate\Database\QueryException $e)
         {
@@ -104,6 +106,7 @@ class ImportProveedoresFlexxus extends Command
                         'cuit' => utf8_encode($cuit),
                         'email' => utf8_encode($data->EMAIL)
                     ]);
+                    $this->actualizados++;
                 } else {
                     $user = User::create([
                         'name' => utf8_encode($data->RAZONSOCIAL),
@@ -128,6 +131,7 @@ class ImportProveedoresFlexxus extends Command
                     {
                         $user->assignRole('proveedor');
                     }
+                    $this->creados++;
                 }
                 return $user;
 

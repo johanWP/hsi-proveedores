@@ -54,7 +54,9 @@ class Bienvenida extends Notification
             desde donde podrá acceder a información relacionada al estatus de sus facturas pendientes y los pagos recibidos.')
             ->line('Haga click en el botón para establecer su primera contraseña.')
             ->action('Establecer Contraseña', url('/password/reset/' . $this->token))
-            ->line('Este enlace es válido hasta ' . \Carbon\Carbon::now()->addMinutes(config('auth.passwords.users.expire'))->format('d-m-Y'))
+            ->line('<em>Este enlace es válido hasta ' .
+                \Carbon\Carbon::now()->addMinutes(config('auth.passwords.users.expire'))->format('d-m-Y h:i:s') .
+                '</em>')
             ->line('Gracias por usar nuestra aplicación');
     }
 
