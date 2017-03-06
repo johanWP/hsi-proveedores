@@ -2,13 +2,14 @@
 
 namespace App\Console\Commands;
 
+use App\Notifications\Bienvenida;
 use Illuminate\Console\Command;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use App\User;
-use App\Profile;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+
 class ImportProveedoresFlexxus extends Command
 {
     /**
@@ -95,31 +96,52 @@ class ImportProveedoresFlexxus extends Command
             if (! $v->fails())
             {
                 $cuit = str_replace('-', '', $data->CUIT);
-                $user = User::updateOrCreate(
-                    ['cuit' => $cuit],
-                    [
+                $user = User::where('cuit', $cuit)->first();
+                if (count($user) > 0)
+                {
+                    $user->update([
                         'name' => utf8_encode($data->RAZONSOCIAL),
                         'cuit' => utf8_encode($cuit),
                         'email' => utf8_encode($data->EMAIL)
-                    ]
-                );
-                if(! $user->hasRole('proveedor'))
-                {
-                    $user->assignRole('proveedor');
+                    ]);
+                } else {
+                    $user = User::create([
+                        'name' => utf8_encode($data->RAZONSOCIAL),
+                        'cuit' => utf8_encode($cuit),
+                        'email' => utf8_encode($data->EMAIL)
+                    ]);
+                    $user->save();
+                    
+//                    $reset_token = strtolower(str_random(64));
+
+
+//                    DB::table('password_resets')->insert([
+//                        'email' => $user->email,
+//                        'token' => bcrypt($reset_token),
+//                        'created_at' => \Carbon\Carbon::now(),
+//                    ]);
+
+                    $user->notify(new Bienvenida($user));
+//                    $user->notify(new Bienvenida($user, $reset_token));
+
+                    if (! $user->hasRole('proveedor'))
+                    {
+                        $user->assignRole('proveedor');
+                    }
                 }
                 return $user;
+
             } else {
                 return false;
             }
-        } catch ( \Illuminate\Validation\ValidationException $e)
-        {
+        } catch ( \Illuminate\Validation\ValidationException $e) {
             Log::error('Firebird: Error al importar usuario. ', ['origen' => $data['EMAIL']]);
             return false;
         }
 
     }
 
-
+/*
     private function crearPerfil($data)
     {
         $cuit = str_replace('-', '', $data->CUIT);
@@ -157,5 +179,5 @@ class ImportProveedoresFlexxus extends Command
             ]
         );
     }
-
+*/
 }
