@@ -28,6 +28,7 @@ trait FormatFirebirdTrait {
         isset($fila->NUMEROCOMPROBANTE) ? $fila->NUMEROCOMPROBANTE = (int)$fila->NUMEROCOMPROBANTE: $fila->NUMEROCOMPROBANTE = null;
         isset($fila->EFECTIVO) ? $fila->EFECTIVO = number_format( (float)$fila->EFECTIVO, 2, ',', '.' ): $fila->EFECTIVO = null;
         isset($fila->NOMBREBENEFICIARIO) ? $fila->NOMBREBENEFICIARIO = utf8_encode( $fila->NOMBREBENEFICIARIO ): $fila->NOMBREBENEFICIARIO = null;
+        isset($fila->NUMERCOCHEQUE) ? $fila->NUMERCOCHEQUE = substr($fila->NUMERCOCHEQUE, -8): $fila->NUMERCOCHEQUE = null;
         isset($fila->MONTOCHEQUE) ? $fila->MONTOCHEQUE = number_format( (float)$fila->MONTOCHEQUE, 2, ',', '.' ): $fila->MONTOCHEQUE = null;
         isset($fila->FECHACHEQUE) ? $fila->FECHACHEQUE = date( "Y-m-d", strtotime($fila->FECHACHEQUE) ): $fila->FECHACHEQUE = null;
         isset($fila->FECHACOMPROBANTE) ? $fila->FECHACOMPROBANTE = date( "Y-m-d", strtotime($fila->FECHACOMPROBANTE) ): $fila->FECHACOMPROBANTE = null;

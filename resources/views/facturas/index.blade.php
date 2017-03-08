@@ -170,15 +170,21 @@
                             $('#tablaCheques tbody tr').remove();
                             $.each(data.cheques, function (key, value){
                                 trCheques = '<tr>' +
-                                        '<td class="col-sm-3">' +
-                                        '<p>' + value.FECHACHEQUE + '</p> </td>' +
-                                        '<td class="col-sm-3">' +
-                                        '<p>' + value.NUMERCOCHEQUE + '</p> </td>' +
-                                        '<td class="col-sm-3">' +
-                                        '<p>' + value.NOMBREBENEFICIARIO + '</p> </td>' +
-                                        '<td class="col-sm-3">' +
-                                        '<p class="text-right">$' + value.MONTOCHEQUE + '</p> </td>' +
-                                        '</tr>';
+                                    '<td class="col-sm-3">' +
+                                    '<p>' + value.FECHACHEQUE + '</p> </td>' +
+                                    '<td class="col-sm-3">' +
+                                    '<p>' + value.NUMERCOCHEQUE + '</p> </td>' +
+                                    '<td class="col-sm-3">' +
+                                    '<p>' + value.NOMBREBENEFICIARIO + '</p> </td>' +
+                                    '<td class="col-sm-3">' +
+                                    '<p class="text-right">$' + value.MONTOCHEQUE + '</p> </td>' +
+                                    '</tr>' +
+                                    '<tr>' +
+                                    '<td colspan="4">' +
+                                    '<strong>Por favor, permítanos por lo menos 5 días habiles desde la fecha de ' +
+                                    'emisión del cheque antes de pasar a retirarlo.</strong>' +
+                                    '</td>' +
+                                    '</tr>';
 
                                 $('#tablaCheques tbody').append(trCheques);
                             });

@@ -49,15 +49,16 @@ class Bienvenida extends Notification
         return (new MailMessage)
             ->from('proveedores@jockeyclub.com.ar', 'Proveedores Jockey Club A.C.')
             ->subject('Bienvenido al Sistema de Proveedores del Jockey Club A.C.')
-            ->line('Hola!')
+            ->greeting('Estimado proveedor,')
             ->line('Desde el Jockey Club A.C. queremos darle la bienvenida al sistema de información para proveedores, 
             desde donde podrá acceder a información relacionada al estatus de sus facturas pendientes y los pagos recibidos.')
             ->line('Haga click en el botón para establecer su primera contraseña.')
             ->action('Establecer Contraseña', url('/password/reset/' . $this->token))
-            ->line('<em>Este enlace es válido hasta ' .
-                \Carbon\Carbon::now()->addMinutes(config('auth.passwords.users.expire'))->format('d-m-Y h:i:s') .
-                '</em>')
-            ->line('Gracias por usar nuestra aplicación');
+            ->line('También puede revisar la ayuda del sistema en el archivo adjunto a este correo.')
+            ->line('Gracias por usar nuestra aplicación')
+            ->attach(public_path().'/Sistema Proveedores - Manual de ingreso v1.pdf', [
+                'mime' => 'application/pdf',
+            ]);
     }
 
     /**

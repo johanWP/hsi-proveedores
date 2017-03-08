@@ -71,7 +71,7 @@ $style = [
                     <tr>
                         <td style="{{ $style['email-masthead'] }}">
                             <a style="{{ $fontFamily }} {{ $style['email-masthead_name'] }}" href="{{ url('/') }}" target="_blank">
-                                <img src="http://prove.jockeyclub.com.ar/img/logo-Jockey.png" alt="Jockey Club AC">
+                                <img src="http://proveedores.jockeyclub.com.ar/img/logo-Jockey.png" alt="Jockey Club AC">
                             </a>
                         </td>
                     </tr>
@@ -157,6 +157,16 @@ $style = [
                                                             <a style="{{ $style['anchor'] }}" href="{{ $actionUrl }}" target="_blank">
                                                                 {{ $actionUrl }}
                                                             </a>
+                                                        </p>
+                                                    </td>
+                                                </tr>                                                <tr>
+                                                    <td style="{{ $fontFamily }}">
+                                                        <p style="{{ $style['paragraph-sub'] }}">
+                                                            Este enlace será válido hasta el
+                                                            {!! \Carbon\Carbon::now()
+                                                                ->addMinutes(config('auth.passwords.users.expire'))
+                                                                ->format('d-m-Y h:i:s')
+                                                            !!}
                                                         </p>
                                                     </td>
                                                 </tr>
