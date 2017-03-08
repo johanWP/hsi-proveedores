@@ -3,12 +3,14 @@
 
 use Illuminate\Support\Facades\Hash;
 use App\User;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
+
 /**
  * Class AcachaAdminLTELaravelTest.
  */
 class AcachaAdminLTELaravelTest extends TestCase
 {
-
+    use DatabaseTransactions;
     /*
      * Overwrite createApplication to add Http Kernel
      * see: https://github.com/laravel/laravel/pull/3943

@@ -214,7 +214,6 @@
                             $('table[name="transferencias"]').hide();
                         }
 
-
                         if (Object.keys(data.retenciones).length > 0) {
                             $('h3[name="retenciones"]').show();
                             $('table[name="retenciones"]').show();

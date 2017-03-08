@@ -6,6 +6,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 
 class RolePermissionTest extends TestCase
 {
+    use DatabaseTransactions;
 
     private $user;
 
@@ -32,12 +33,13 @@ class RolePermissionTest extends TestCase
      *
      * @return void
      */
-//    public function testExample()
-//    {
-//        $this->visit('/roles')
-//            ->type('rol de prueba', 'name')
-//            ->type('descripción de prueba')
-//            ->click('Guardar')
-//            ->
-//    }
+    public function testIncluirRol()
+    {
+        $this->actingAs($this->user)
+            ->visit('/roles')
+            ->type('rol de prueba', 'name')
+            ->type('descripción de prueba', 'description')
+            ->press('Guardar')
+            ->see('rol de prueba');
+    }
 }
